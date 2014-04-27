@@ -10,10 +10,21 @@ game g_game;
 void GameInit() {
 	g_game._player = spawn_entity(&g_game, new player(), vec2(10.0f, 9.5f));
 
-	for(int j = 10; j < MAP_HEIGHT; j++) {
+	for(int j = 0; j < MAP_HEIGHT; j++) {
 		for(int i = 0; i < MAP_WIDTH; i++) {
 			if (tile* t = g_game.get(i, j)) {
-				t->type = TT_SOLID;
+				if (j < 10) {
+					t->type =  ((i == 0) || (i == MAP_WIDTH - 1)) ? TT_VOID : TT_EMPTY;
+				}
+				else if (j < (MAP_HEIGHT - 2)) {
+					t->type = ((i == 0) || (i == MAP_WIDTH - 1)) ? TT_WALL : TT_SOLID;
+
+					if (g_game_rand.rand(0, 10) == 0) {
+						t->ore = 1;
+					}
+				}
+				else
+					t->type = TT_WALL;
 			}
 		}
 	}
@@ -21,6 +32,61 @@ void GameInit() {
 
 float mix(bool a, bool b, bool c, bool d) {
 	return (a || b || c || d) ? 1.0f : 0.0f;
+}
+
+void update_search(game* g, ivec2 start) {
+	u32 open[MAP_WIDTH * MAP_HEIGHT];
+	int num_open = 0;
+
+	int sx = clamp(start.x, 0, MAP_WIDTH - 1);
+	int sy = clamp(start.y, 0, MAP_HEIGHT - 1);
+
+	open[num_open++] = (sy * MAP_WIDTH) + sx;
+
+	for(int i = 0; i < (MAP_WIDTH * MAP_HEIGHT); i++)
+		g->_map[i].search = 0xFFFFFFFF;
+
+	if (tile* t = g->get(sx, sy))
+		t->search = 0;
+
+	const int COST_SHIFT = 12;
+	const int COST_MASK = (1 << COST_SHIFT) - 1;
+
+	tile* tiles = g->_map;
+
+	while(num_open > 0) {
+		std::pop_heap(&open[0], &open[num_open], [](u32 a, u32 b) { return b < a; });
+
+		int c = open[--num_open];
+		int x = (c & COST_MASK) % MAP_WIDTH;
+		int y = (c & COST_MASK) / MAP_WIDTH;
+		u32 cost = c >> COST_SHIFT;
+
+		int xd[4] = { -1, 1, 0, 0 };
+		int yd[4] = { 0, 0, -1, 1 };
+
+		for(int j = 0; j < 4; j++) {
+			int nx = x + xd[j];
+			int ny = y + yd[j];
+			int new_cost = cost + 1;
+
+			if ((nx < 0) || (ny < 0) || (nx >= MAP_WIDTH) || (ny >= MAP_HEIGHT))
+				continue;
+
+			tile* t = &tiles[(ny * MAP_WIDTH) + nx];
+
+			if (t->search != 0xFFFFFFFF)
+				continue;
+
+			if (t->is_solid()) new_cost += 100;
+
+			t->search = new_cost;
+
+			open[num_open++] = ((ny * MAP_WIDTH) + nx) | (new_cost << COST_SHIFT);
+
+			std::push_heap(&open[0], &open[num_open], [](u32 a, u32 b) { return b < a; });
+		}
+	}
 }
 
 void GameUpdate() {
@@ -43,14 +109,26 @@ void GameUpdate() {
 		}
 
 		target_cam_pos.y = g->_target_cam_y;
+
+		update_search(g, to_ivec2(p->centre()));
 	}
 
 	g->_cam_pos = lerp(g->_cam_pos, target_cam_pos, 0.2f);
 
 	set_camera(g->_cam_pos, 10.0f);
 
+	if (--g->_spawn_time <= 0) {
+		vec2 pos(g_game_rand.frand(1.0f, MAP_WIDTH - 1.0f), 2.0f);
+
+		if (bug* e = spawn_entity(&g_game, new bug(), pos)) {
+		}
+
+		g->_spawn_time = 120;
+	}
+
 	tick_entities(g);
 	purge_entities(g);
+	update_particles(g);
 
 	colour sky0(0.4f, 0.7f, 1.0f, 1.0f);
 	colour sky1(0.45f, 0.75f, 1.0f, 1.0f);
@@ -110,14 +188,14 @@ void GameUpdate() {
 		for(int i = 0; i < MAP_WIDTH; i++) {
 			int t = g->get_tile(i, j);
 
-			if (t == TT_EMPTY) {
+			if (t == TT_EMPTY || t == TT_VOID) {
 				float f = 1.0f / 2.0f;
 				float a = 0.5f;
 
-				bool xn = g->get_tile(i - 1, j) == TT_SOLID;
-				bool xp = g->get_tile(i + 1, j) == TT_SOLID;
-				bool yn = g->get_tile(i, j - 1) == TT_SOLID;
-				bool yp = g->get_tile(i, j + 1) == TT_SOLID;
+				bool xn = g->is_solid(i - 1, j);
+				bool xp = g->is_solid(i + 1, j);
+				bool yn = g->is_solid(i, j - 1);
+				bool yp = g->is_solid(i, j + 1);
 
 				if (xn) draw_rect(vec2((float)i, (float)j), vec2((float)i + f, (float)j + 1), colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, a), colour(0.0f, 0.0f));
 				if (xp) draw_rect(vec2((float)i + 1, (float)j), vec2((float)i + 1 - f, (float)j + 1), colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, a), colour(0.0f, 0.0f));
@@ -125,10 +203,10 @@ void GameUpdate() {
 				if (yn) draw_rect(vec2((float)i, (float)j), vec2((float)i + 1, (float)j + f), colour(0.0f, a), colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
 				if (yp) draw_rect(vec2((float)i, (float)j + 1), vec2((float)i + 1, (float)j + 1 - f), colour(0.0f, a), colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
 
-				if (!xn && !yn && (g->get_tile(i - 1, j - 1) == TT_SOLID)) draw_tri(vec2((float)i, (float)j),			vec2((float)i + f, (float)j),			vec2((float)i, (float)j + f),			colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
-				if (!xp && !yn && (g->get_tile(i + 1, j - 1) == TT_SOLID)) draw_tri(vec2((float)i + 1, (float)j),		vec2((float)i + 1 - f, (float)j),		vec2((float)i + 1, (float)j + f),		colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
-				if (!xn && !yp && (g->get_tile(i - 1, j + 1) == TT_SOLID)) draw_tri(vec2((float)i, (float)j + 1),		vec2((float)i + f, (float)j + 1),		vec2((float)i, (float)j + 1 - f),		colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
-				if (!xp && !yp && (g->get_tile(i + 1, j + 1) == TT_SOLID)) draw_tri(vec2((float)i + 1, (float)j + 1),	vec2((float)i + 1 - f, (float)j + 1),	vec2((float)i + 1, (float)j + 1 - f),	colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
+				if (!xn && !yn && g->is_solid(i - 1, j - 1)) draw_tri(vec2((float)i, (float)j),			vec2((float)i + f, (float)j),			vec2((float)i, (float)j + f),			colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
+				if (!xp && !yn && g->is_solid(i + 1, j - 1)) draw_tri(vec2((float)i + 1, (float)j),		vec2((float)i + 1 - f, (float)j),		vec2((float)i + 1, (float)j + f),		colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
+				if (!xn && !yp && g->is_solid(i - 1, j + 1)) draw_tri(vec2((float)i, (float)j + 1),		vec2((float)i + f, (float)j + 1),		vec2((float)i, (float)j + 1 - f),		colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
+				if (!xp && !yp && g->is_solid(i + 1, j + 1)) draw_tri(vec2((float)i + 1, (float)j + 1),	vec2((float)i + 1 - f, (float)j + 1),	vec2((float)i + 1, (float)j + 1 - f),	colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
 			}
 			else {
 				bool c0 = g->get_tile(i - 1, j - 1) == TT_EMPTY;
@@ -156,22 +234,31 @@ void GameUpdate() {
 						tile_colour * colour(mix(c3, c4, c6, c7), 1.0f),
 						tile_colour * colour(mix(c4, c5, c7, c8), 1.0f),
 					tile_num, (c0 + c8) < (c2 + c6) ? DT_ALT_TRI : 0);
+
+				if (tile* d = g->get(i, j)) {
+					if (d->ore) {
+						int flags = 0;
+
+						flags |= (hash & 16) ? DT_FLIP_X : 0;
+						flags |= (hash & 32) ? DT_FLIP_Y : 0;
+
+						draw_tile(vec2((float)i, (float)j), vec2((float)i + 1, (float)j + 1), colour(0.75f, 0.2f, 0.2f, 1.0f), 160 + (hash % 3), flags); 
+					}
+				}
 			}
 		}
 	}
 
 	for(int j = 0; j < MAP_HEIGHT; j++) {
 		for(int i = 0; i < MAP_WIDTH; i++) {
-			int t = g->get_tile(i, j);
-
-			if (t == TT_EMPTY) {
+			if (!g->is_solid(i, j)) {
 				float f = 1.0f / 8.0f;
 				float a = 1.0f / 16.0f;
 
-				bool xn = g->get_tile(i - 1, j) == TT_SOLID;
-				bool xp = g->get_tile(i + 1, j) == TT_SOLID;
-				bool yn = g->get_tile(i, j - 1) == TT_SOLID;
-				bool yp = g->get_tile(i, j + 1) == TT_SOLID;
+				bool xn = g->is_solid(i - 1, j);
+				bool xp = g->is_solid(i + 1, j);
+				bool yn = g->is_solid(i, j - 1);
+				bool yp = g->is_solid(i, j + 1);
 
 				int edge_tile = ((i + j) & 1) ? 144 : 145;
 
@@ -195,8 +282,16 @@ void GameUpdate() {
 					draw_tile(vec2((float)i, (float)j + 1 - a), vec2((float)i + 1, (float)j + 2 - a), edge_colour, edge_tile, 0);
 				}
 			}
+
+			/*if (tile* t = g->get(i, j)) {
+				float s = clamp(t->search / 30.0f, 0.01f, 0.45f);
+				float l = 0.5f - s;
+				float h = 0.5f + s;
+				draw_rect(vec2(i+l, j+l), vec2(i+h, j+h), colour(0.25f, 0.0f));
+			}*/
 		}
 	}
 
 	draw_entities(g);
+	draw_particles(g);
 }

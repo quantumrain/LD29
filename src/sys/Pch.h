@@ -17,4 +17,6 @@
 #include <math.h>
 #include <assert.h>
 
+#include <algorithm>
+
 #endif // PCH_H

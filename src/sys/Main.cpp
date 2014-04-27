@@ -83,10 +83,15 @@ int which_key(int c, bool shifted) {
 		case VK_NUMPAD4:	return KEY_LEFT;
 		case VK_NUMPAD6:	return KEY_RIGHT;
 
-		case ' ':
-		case VK_TAB:
+		case 'X':
+		case 'O':
 		case VK_RETURN:
-		return shifted ? KEY_ALT_FIRE : KEY_FIRE;
+		return KEY_FIRE;
+
+		case 'Z':
+		case 'P':
+		case VK_SPACE:
+		return KEY_ALT_FIRE;
 
 		case 'R':		return KEY_RESET;
 		case VK_F1:		return KEY_MODE;

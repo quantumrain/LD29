@@ -116,3 +116,29 @@ aabb2 cast_aabb(game* g, aabb2 self, vec2 delta, int* clipped) {
 
 	return self;
 }
+
+// avoid
+
+void avoid_others(game* g, entity* self) {
+	for(auto e : g->_entities) {
+		if (e == self) continue; // todo: flag for player to avoid avoiding him!
+
+		vec2 delta = self->centre() - e->centre();
+
+		float dist = 0.25f + 0.25f;
+
+		if (length_sq(delta) > square(dist))
+			continue;
+
+		float l = length(delta);
+		vec2 v = delta / l;
+
+		if (l < 0.00001f)
+			v = g_game_rand.sv2rand(1.0f);
+
+		v *= ((dist - l) / dist) * 2.0f;
+
+		self->_vel += v * DT;
+		//e->_vel -= v * DT;
+	}
+}
