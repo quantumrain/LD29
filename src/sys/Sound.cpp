@@ -112,6 +112,14 @@ void SoundInit()
 	load_riff(gXAudio, &gSound[kSid_Buzz],		"data\\buzz.wav");
 	load_riff(gXAudio, &gSound[kSid_Switch],	"data\\switch.wav");
 	load_riff(gXAudio, &gSound[kSid_Win],		"data\\win.wav");
+
+	load_riff(gXAudio, &gSound[kSid_BugDies],		"data\\bug_dies.wav");
+	load_riff(gXAudio, &gSound[kSid_BugHurt],		"data\\bug_hurt.wav");
+	load_riff(gXAudio, &gSound[kSid_TurretDies],	"data\\turret_dies.wav");
+	load_riff(gXAudio, &gSound[kSid_TurretFire],	"data\\turret_fire.wav");
+	load_riff(gXAudio, &gSound[kSid_TurretHurt],	"data\\turret_hurt.wav");
+	load_riff(gXAudio, &gSound[kSid_TurretPlace],	"data\\turret_place.wav");
+	load_riff(gXAudio, &gSound[kSid_PlayerHurt],	"data\\player_hurt.wav");
 }
 
 void SoundShutdown()

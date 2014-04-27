@@ -66,6 +66,8 @@ struct player : entity {
 	int _money;
 	bool _place_latch;
 	int _health;
+	int _flash_money;
+	int _flash_health;
 };
 
 struct bug : entity {
@@ -74,10 +76,12 @@ struct bug : entity {
 
 	virtual void tick(game* g);
 	virtual void on_hit_wall(game* g, int clipped);
+	virtual void on_attacked(game* g);
 	virtual void post_tick(game* g);
 
 	int _damage;
 	bool _on_ground;
+	int _flash_t;
 };
 
 struct gem : entity {
@@ -105,6 +109,7 @@ struct turret : entity {
 	int _rot_t;
 	int _flash_t;
 	int _reload;
+	float _recoil;
 };
 
 struct bullet : entity {
@@ -114,6 +119,9 @@ struct bullet : entity {
 	virtual void tick(game* g);
 	virtual void on_hit_wall(game* g, int clipped);
 	virtual void post_tick(game* g);
+	virtual void render(game* g);
+
+	int _time;
 };
 
 enum tile_type {
@@ -138,11 +146,11 @@ struct tile {
 	bool is_solid() { return (type == TT_SOLID) || (type == TT_WALL) || (type == TT_TURRET); }
 };
 
-const int MAP_WIDTH = 21;
-const int MAP_HEIGHT = 60;
+const int MAP_WIDTH = 31;
+const int MAP_HEIGHT = 80;
 
 struct game {
-	game() : _player(), _cam_pos(MAP_WIDTH * 0.5f, 8.5f), _target_cam_y(8.5f), _spawn_time(800) { }
+	game() : _player(), _cam_pos(MAP_WIDTH * 0.5f, 8.5f), _target_cam_y(8.5f), _spawn_time(800), _diff(1.0f) { }
 
 	tile _map[MAP_WIDTH * MAP_HEIGHT];
 	list<entity> _entities;
@@ -150,6 +158,7 @@ struct game {
 	vec2 _cam_pos;
 	float _target_cam_y;
 
+	float _diff;
 	int _spawn_time;
 
 	int get_tile(int x, int y) { return (x >= 0) && (y >= 0) && (x < MAP_WIDTH) && (y < MAP_HEIGHT) ? _map[MAP_WIDTH * y + x].type : TT_VOID; }
@@ -161,6 +170,11 @@ struct game {
 	bool is_solid(int x, int y) {
 		int t =  get_tile(x, y);
 		return (t == TT_SOLID) || (t == TT_WALL) || (t == TT_TURRET);
+	}
+
+	bool is_raycast_solid(int x, int y) {
+		int t =  get_tile(x, y);
+		return (t == TT_SOLID) || (t == TT_WALL);
 	}
 
 	bool is_roughable(int x, int y) {

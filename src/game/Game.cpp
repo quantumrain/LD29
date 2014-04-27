@@ -2,12 +2,15 @@
 #include "Common.h"
 #include "Game.h"
 
-const wchar_t* gAppName = L"LD29 - Beneath the Surface";
+const wchar_t* gAppName = L"LD29 - Tunnel Defense";
 
 random g_game_rand(1);
 game g_game;
+bool g_title = true;
 
 void GameInit() {
+	g_game_rand = random(GetTickCount());
+
 	g_game._player = spawn_entity(&g_game, new player(), vec2(10.0f, 9.5f));
 
 	for(int j = 0; j < MAP_HEIGHT; j++) {
@@ -78,7 +81,7 @@ void update_search(game* g, ivec2 start) {
 			if (t->search != 0xFFFFFFFF)
 				continue;
 
-			if (t->type == TT_TURRET) new_cost += 10;
+			if (t->type == TT_TURRET) new_cost += 50;
 			else if (t->type != TT_EMPTY) new_cost += 100;
 
 			t->search = new_cost;
@@ -93,10 +96,49 @@ void update_search(game* g, ivec2 start) {
 void GameUpdate() {
 	game* g = &g_game;
 
-	vec2 target_cam_pos;
+	if (is_key_pressed(KEY_RESET)) {
+		memset(g->_map, 0, sizeof(g->_map));
+
+		g->_entities.free();
+		g->_player = 0;
+
+		g->_cam_pos = vec2(MAP_WIDTH * 0.5f, 8.5f);
+		g->_target_cam_y = 8.5f;
+		g->_spawn_time = 800;
+		g->_diff = 1.0f;
+
+		GameInit();
+
+		g_title = true;
+	}
+
+	if (g_title) {
+		set_camera(vec2(), 10.0f);
+
+		float ratio = g_WinSize.y / (float)g_WinSize.x;
+		vec2 orig(-10.0f, -10.0f * ratio);
+
+		draw_string(vec2(0.0f, -4.0f), 0.15f, TEXT_CENTRE, colour(0.5f, 0.5f, 0.8f, 1.0f), "Tunnel Defense");
+		draw_string(vec2(0.0f, -2.5f), 0.05f, TEXT_CENTRE, colour(0.3f, 0.3f, 0.6f, 1.0f), "LD29 - Beneath the Surface");
+
+		float y = 0.5f;
+
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Move + Aim - \001\002\003\004"); y += 0.5f;
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Jump - Z"); y += 0.5f;
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Zap Block - X"); y += 0.5f;
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Place Turret - C"); y += 0.75f;
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.15f, 0.3f, 0.15f, 1.0f), "Alternate Controls - WASD, I, O, P"); y += 0.5f;
+
+		draw_string(vec2(0.0f, 4.0f), 0.05f, TEXT_CENTRE, colour(0.5f, 0.5f, 0.5f, 1.0f), "press SPACE to START");
+
+
+		if (is_key_pressed(KEY_FIRE) || is_key_pressed(KEY_ALT_FIRE)) g_title = false;
+
+		return;
+	}
 
 	if (player* p = g->_player) {
-		target_cam_pos = vec2(MAP_WIDTH * 0.5f, p->centre().y);
+		vec2 target_cam_pos = vec2(MAP_WIDTH * 0.5f, p->centre().y);
 
 		float dy = target_cam_pos.y - g->_target_cam_y;
 
@@ -112,11 +154,11 @@ void GameUpdate() {
 		target_cam_pos.y = g->_target_cam_y;
 
 		update_search(g, to_ivec2(p->centre()));
+
+		g->_cam_pos = lerp(g->_cam_pos, target_cam_pos, 0.2f);
 	}
 
-	g->_cam_pos = lerp(g->_cam_pos, target_cam_pos, 0.2f);
-
-	set_camera(g->_cam_pos, 10.0f);
+	set_camera(g->_cam_pos, 15.0f);
 
 	if (--g->_spawn_time <= 0) {
 		vec2 pos(g_game_rand.frand(1.0f, MAP_WIDTH - 1.0f), 2.0f);
@@ -124,7 +166,8 @@ void GameUpdate() {
 		if (bug* e = spawn_entity(&g_game, new bug(), pos)) {
 		}
 
-		g->_spawn_time = 120;
+		g->_diff += 0.02f;
+		g->_spawn_time = 120 - (int)(g->_diff * 10.0f);
 	}
 
 	tick_entities(g);
@@ -171,8 +214,8 @@ void GameUpdate() {
 
 	random sr(1);
 
-	for(int i = 0; i < 300; i++) {
-		vec2 pos = sr.v2rand(vec2(0.0f, 2.0f), vec2((float)MAP_WIDTH, sky_y));
+	for(int i = 0; i < 600; i++) {
+		vec2 pos = sr.v2rand(vec2(0.0f, 0.0f), vec2((float)MAP_WIDTH, sky_y));
 		float f = sr.frand();
 		float s = lerp(0.01f, 0.02f, f);
 		colour c(lerp(0.3f, 2.0f, f) * square(1.0f - square(pos.y / sky_y)), 1.0f);
@@ -299,9 +342,28 @@ void GameUpdate() {
 	if (player* p = g->_player) {
 		float ratio = g_WinSize.y / (float)g_WinSize.x;
 
-		vec2 orig(-10.0f, -10.0f * ratio); orig += g->_cam_pos;
+		vec2 orig(-15.0f, -15.0f * ratio); orig += g->_cam_pos;
 
-		draw_string(orig + vec2(0.2f, 0.2f), 0.05f, TEXT_LEFT, colour(0.6f, 1.0f), "Health: %i", p->_health);
-		draw_string(orig + vec2(0.2f, 0.8f), 0.05f, TEXT_LEFT, colour(0.6f, 1.0f), "Metal: %i", p->_money);
+		draw_string(orig + vec2(0.2f, 0.2f), 0.02f, TEXT_LEFT, colour(0.6f, 1.0f), "Health");
+
+		for(int i = 0; i < 8; i++) {
+			vec2 pt = orig + vec2(i * 0.4f, 0.0f) + vec2(0.2f, 0.4f);
+
+			float f = clamp(p->_flash_health / 2.0f, 0.0f, 1.0f);
+
+			draw_rect(pt - vec2(0.025f), pt + vec2(0.325f, 0.425f), colour(f, f, f, 1.0f));
+			draw_rect(pt, pt + vec2(0.3f, 0.4f), (i < p->_health) ? colour(0.7f, 0.3f, 0.1f, 1.0f) : colour(0.2f, 0.2f, 0.2f, 1.0f));
+		}
+
+		draw_string(orig + vec2(0.2f, 1.0f), 0.02f, TEXT_LEFT, colour(0.6f, 1.0f), "Metal");
+
+		for(int i = 0; i < 8; i++) {
+			vec2 pt = orig + vec2(i * 0.4f, 0.0f) + vec2(0.2f, 1.2f);
+
+			float f = clamp(p->_flash_money / 2.0f, 0.0f, 1.0f);
+
+			draw_rect(pt - vec2(0.025f), pt + vec2(0.325f, 0.425f), colour(f, f, f, 1.0f));
+			draw_rect(pt, pt + vec2(0.3f, 0.4f), (i < p->_money) ? colour(0.2f, 0.2f, 0.6f, 1.0f) : colour(0.2f, 0.2f, 0.2f, 1.0f));
+		}
 	}
 }

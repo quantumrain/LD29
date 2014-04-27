@@ -186,7 +186,7 @@ bool raycast(game* g, vec2 from, vec2 to) {
 	vec2 t(vec2((from.x > to.x) ? (from.x - lb.x) : (ub.x - from.x), (from.y > to.y) ? (from.y - lb.y) : (ub.y - from.y)) / abs_delta);
 
 	for(;;) {
-		if (g->is_solid(cur.x, cur.y))
+		if (g->is_raycast_solid(cur.x, cur.y))
 			return true;
 
 		if (t.x <= t.y) {

@@ -5,11 +5,13 @@
 const int JUMP_GROUND_GRACE = 8;
 const int TIME_TILL_GROUNDED = 4;
 const int JUMP_LAUNCH_TIME = 8;
-const int FIRE_TIME = 15;
+const int FIRE_TIME = 3;
 
 player::player() : entity(ET_PLAYER), _on_ground(false), _last_clipped(), _jump_latch(), _jump_ground(), _jump_launch(), _wall_left(), _wall_right(), _wall_dragging(), _ground_time(), _fire_latch(), _fire_time(), _anim(), _money(5), _place_latch(), _health(8) {
 	_bb.max = vec2(4.0f / 16.0f, 12.0f / 16.0f);
 	_draw_off = vec2(0.0f, -2.0f / 16.0f);
+	_flash_money = 0;
+	_flash_health = 0;
 }
 
 player::~player() {
@@ -88,16 +90,29 @@ void player::tick(game* g) {
 
 	if (is_key_pressed(KEY_PLACE)) {
 		if (!_place_latch && (_fire_time <= 0) && (_ground_time > TIME_TILL_GROUNDED)) {
+			_place_latch = true;
+
 			if (_money >= 3) {
 				aabb2 box(to_vec2(tile_target) + 0.05f, to_vec2(tile_target) + 0.95f);
 
 				if (!is_obstructed(g, box)) {
 					if (g->get_tile(tile_target.x, tile_target.y) == TT_EMPTY) {
 						spawn_entity(g, new turret(), (box.min + box.max) * 0.5f);
-						_place_latch = true;
+						
 						_money -= 3;
+						_flash_money = 4;
+
+						SoundPlay(kSid_TurretPlace, 1.0f, 1.0f);
 					}
+					else
+						SoundPlay(kSid_Buzz, 0.5f, 1.0f);
 				}
+				else
+					SoundPlay(kSid_Buzz, 0.5f, 1.0f);
+			}
+			else {
+				_flash_money = 4;
+				SoundPlay(kSid_Buzz, 0.5f, 1.0f);
 			}
 		}
 	}
@@ -120,7 +135,7 @@ void player::tick(game* g) {
 		if (--_fire_time == 0) {
 			if (tile* t = g->get(_fire_target.x, _fire_target.y)) {
 				if (t->type == TT_SOLID) {
-					if ((t->damage += 100) >= t->max_damage()) {
+					if ((t->damage += 20) >= t->max_damage()) {
 						t->type = TT_EMPTY;
 						t->damage = 0;
 
@@ -258,6 +273,9 @@ void player::tick(game* g) {
 
 	if (test_left & CLIPPED_XN) _wall_left = 4;
 	if (test_right & CLIPPED_XP) _wall_right = 4;
+
+	if (_flash_money > 0) _flash_money--;
+	if (_flash_health > 0) _flash_health--;
 }
 
 void player::on_hit_wall(game* g, int clipped) {

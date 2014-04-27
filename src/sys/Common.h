@@ -82,6 +82,13 @@ enum SoundId {
 	kSid_Buzz,
 	kSid_Switch,
 	kSid_Win,
+	kSid_BugDies,
+	kSid_BugHurt,
+	kSid_TurretDies,
+	kSid_TurretFire,
+	kSid_TurretHurt,
+	kSid_TurretPlace,
+	kSid_PlayerHurt,
 	kSid_Max
 };
 

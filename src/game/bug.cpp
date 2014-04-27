@@ -25,7 +25,7 @@ ivec2 determine_dir(game* g, ivec2 p) {
 	}
 }
 
-bug::bug() : entity(ET_BUG), _damage(), _on_ground() {
+bug::bug() : entity(ET_BUG), _damage(), _on_ground(), _flash_t() {
 	_bb.max = vec2(10.0f / 16.0f, 6.0f / 16.0f);
 	_sprite = 48;
 	_draw_off = vec2(0.0f, -5.0f / 16.0f);
@@ -59,10 +59,14 @@ void bug::tick(game* g) {
 		if ((t->type == TT_SOLID) || (t->type == TT_TURRET)) {
 			if (++t->damage >= t->max_damage()) {
 				if (t->type == TT_SOLID) {
+					SoundPlay(kSid_Dit, 1.0f, 1.0f);
+
 					t->damage = 0;
 					t->type = TT_EMPTY;
 				}
 				else if (t->type == TT_TURRET) {
+					SoundPlay(kSid_TurretDies, 1.0f, 1.0f);
+
 					if (t->owner) {
 						t->owner->destroy();
 					}
@@ -89,11 +93,24 @@ void bug::tick(game* g) {
 				add_particle(centre() + _draw_off + g_game_rand.sv2rand(vec2(0.3f)), vec2(0.0f, 0.02f), c, 0.3f, 0.3f, 0.0f, 10);
 			}
 
-			p->_health--;
-			SoundPlay(kSid_Switch, 1.5f, 1.5f);
+			p->_flash_health = 4;
+
+			if (--p->_health <= 0) {
+				SoundPlay(kSid_PlayerHurt, 0.25f, g_game_rand.frand(0.9f, 1.0f));
+				p->destroy();
+				g->_player = 0;
+			}
+			else {
+				SoundPlay(kSid_PlayerHurt, g_game_rand.frand(0.9f, 1.1f), g_game_rand.frand(0.9f, 1.0f));
+			}
+
 			destroy();
 		}
 	}
+
+	if (_flash_t > 0) _flash_t--;
+
+	_sprite = ((_flash_t == 4) || (_flash_t == 3)) ? 49 : 48;
 }
 
 void bug::on_hit_wall(game* g, int clipped) {
@@ -101,6 +118,24 @@ void bug::on_hit_wall(game* g, int clipped) {
 	if (clipped & CLIPPED_XN) _vel.x = max(_vel.x, 0.0f);
 	if (clipped & CLIPPED_YP) { _vel.y = min(_vel.y, 0.0f); _on_ground = true; }
 	if (clipped & CLIPPED_YN) _vel.y = max(_vel.y, 0.0f);
+}
+
+void bug::on_attacked(game* g) {
+	if (_flash_t <= 0) {
+		_flash_t = 4;
+		SoundPlay(kSid_BugHurt, g_game_rand.frand(0.9f, 1.1f), g_game_rand.frand(0.4f, 0.5f));
+	}
+
+	if (++_damage >= (5 * g->_diff)) {
+		for(int i = 0; i < 10; i++) {
+			colour c(0.7f, 0.7f, 0.7f, 1.0f);
+			add_particle(centre() + _draw_off + g_game_rand.sv2rand(vec2(0.3f)), vec2(0.0f, 0.02f), c, 0.3f, 0.3f, 0.0f, 10);
+		}
+
+		SoundPlay(kSid_BugDies, g_game_rand.frand(0.9f, 1.1f), g_game_rand.frand(0.3f, 0.4f));
+
+		destroy();
+	}
 }
 
 void bug::post_tick(game* g) {

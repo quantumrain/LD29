@@ -61,7 +61,7 @@ void draw_string(vec2 pos, vec2 scale, int flags, colour col, const char* txt, .
 	if (flags == TEXT_CENTRE)		pos.x -= measure_string(txt) * 0.5f * scale.x;
 	else if (flags == TEXT_RIGHT)	pos.x -= measure_string(txt) * scale.x;
 
-	const char* letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.:/-!@(),\\;?'\"+*=<>%&";
+	const char* letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.:/-!@(),\\;?'\"+*=<>%&\001\002\003\004";
 
 	for(const char* p = buf; *p != '\0'; p++) {
 		int c = toupper(*p);
