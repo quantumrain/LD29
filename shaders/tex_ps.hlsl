@@ -7,7 +7,6 @@ struct VS_OUTPUT
 
 sampler2D s0 : register(s0);
 
-float4 main(VS_OUTPUT input) : SV_TARGET
-{
+float4 main(VS_OUTPUT input) : SV_TARGET {
 	return tex2D(s0, input.uv) * input.colour;
 }

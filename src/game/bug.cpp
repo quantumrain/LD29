@@ -25,7 +25,7 @@ ivec2 determine_dir(game* g, ivec2 p) {
 	}
 }
 
-bug::bug() {
+bug::bug() : entity(ET_BUG), _damage(), _on_ground() {
 	_bb.max = vec2(10.0f / 16.0f, 6.0f / 16.0f);
 	_sprite = 48;
 	_draw_off = vec2(0.0f, -5.0f / 16.0f);
@@ -53,9 +53,47 @@ void bug::tick(game* g) {
 	if (_on_ground)
 		_vel.y -= 0.05f;
 
+	ivec2 tp = ic + dir;
+
+	if (tile* t = g->get(tp.x, tp.y)) {
+		if ((t->type == TT_SOLID) || (t->type == TT_TURRET)) {
+			if (++t->damage >= t->max_damage()) {
+				if (t->type == TT_SOLID) {
+					t->damage = 0;
+					t->type = TT_EMPTY;
+				}
+				else if (t->type == TT_TURRET) {
+					if (t->owner) {
+						t->owner->destroy();
+					}
+
+					t->damage = 0;
+					t->type = TT_EMPTY;
+					t->owner = 0;
+				}
+			}
+			else {
+				if (t->owner) t->owner->on_attacked(g);
+			}
+		}
+	}
+
 	_on_ground = false;
 
 	avoid_others(g, this);
+
+	if (player* p = g->_player) {
+		if (length_sq(p->centre() - centre()) < square(0.4f)) {
+			for(int i = 0; i < 10; i++) {
+				colour c(1.0f, 0.2f, 0.2f, 1.0f);
+				add_particle(centre() + _draw_off + g_game_rand.sv2rand(vec2(0.3f)), vec2(0.0f, 0.02f), c, 0.3f, 0.3f, 0.0f, 10);
+			}
+
+			p->_health--;
+			SoundPlay(kSid_Switch, 1.5f, 1.5f);
+			destroy();
+		}
+	}
 }
 
 void bug::on_hit_wall(game* g, int clipped) {

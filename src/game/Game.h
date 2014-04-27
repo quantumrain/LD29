@@ -5,23 +5,36 @@ extern random g_game_rand;
 
 struct game;
 
+enum entity_type {
+	ET_PLAYER,
+	ET_BUG,
+	ET_GEM,
+	ET_TURRET,
+	ET_BULLET
+};
+
 struct entity {
-	entity();
+	entity(entity_type type);
 	virtual ~entity();
 
 	void destroy();
 
+	virtual void spawned(game* g);
 	virtual void tick(game* g);
 	virtual void on_hit_wall(game* g, int clipped);
+	virtual void on_attacked(game* g);
 	virtual void post_tick(game* g);
+	virtual void render(game* g);
 
 	vec2 centre() const { return (_bb.min + _bb.max) * 0.5f; }
 
 	enum {
-		FLAG_DESTROYED = 0x1
+		FLAG_DESTROYED = 0x1,
+		FLAG_CUSTOM_RENDER = 0x2
 	};
 
 	uint32_t _flags;
+	entity_type _type;
 	aabb2 _bb;
 	vec2 _vel;
 	vec2 _draw_off;
@@ -50,8 +63,9 @@ struct player : entity {
 	int _fire_time;
 	ivec2 _fire_target;
 	int _anim;
-	bool _up_latch;
-	bool _down_latch;
+	int _money;
+	bool _place_latch;
+	int _health;
 };
 
 struct bug : entity {
@@ -62,33 +76,73 @@ struct bug : entity {
 	virtual void on_hit_wall(game* g, int clipped);
 	virtual void post_tick(game* g);
 
+	int _damage;
 	bool _on_ground;
+};
+
+struct gem : entity {
+	gem();
+	virtual ~gem();
+
+	virtual void tick(game* g);
+	virtual void on_hit_wall(game* g, int clipped);
+	virtual void post_tick(game* g);
+};
+
+struct turret : entity {
+	turret();
+	virtual ~turret();
+
+	virtual void spawned(game* g);
+	virtual void tick(game* g);
+	virtual void on_hit_wall(game* g, int clipped);
+	virtual void on_attacked(game* g);
+	virtual void post_tick(game* g);
+	virtual void render(game* g);
+
+	float _rot;
+	float _rot_v;
+	int _rot_t;
+	int _flash_t;
+	int _reload;
+};
+
+struct bullet : entity {
+	bullet();
+	virtual ~bullet();
+
+	virtual void tick(game* g);
+	virtual void on_hit_wall(game* g, int clipped);
+	virtual void post_tick(game* g);
 };
 
 enum tile_type {
 	TT_EMPTY,
 	TT_VOID,
 	TT_SOLID,
-	TT_WALL
+	TT_WALL,
+	TT_TURRET
 };
 
 struct tile {
 	u8 type;
-	u8 damage;
+	u16 damage;
 	u8 ore;
 	u32 search;
 
-	tile() : type(TT_EMPTY), damage(), ore(), search() { }
+	entity* owner;
 
-	int max_damage() { return ore ? 2 : 1; }
-	bool is_solid() { return (type == TT_SOLID) || (type == TT_WALL); }
+	tile() : type(TT_EMPTY), damage(), ore(), search(), owner() { }
+
+	int max_damage() { return ore ? 200 : 100; }
+	bool is_solid() { return (type == TT_SOLID) || (type == TT_WALL) || (type == TT_TURRET); }
 };
 
 const int MAP_WIDTH = 21;
 const int MAP_HEIGHT = 60;
 
 struct game {
-	game() : _player(), _cam_pos(MAP_WIDTH * 0.5f, 8.5f), _target_cam_y(8.5f), _spawn_time(350) { }
+	game() : _player(), _cam_pos(MAP_WIDTH * 0.5f, 8.5f), _target_cam_y(8.5f), _spawn_time(800) { }
 
 	tile _map[MAP_WIDTH * MAP_HEIGHT];
 	list<entity> _entities;
@@ -105,6 +159,11 @@ struct game {
 
 
 	bool is_solid(int x, int y) {
+		int t =  get_tile(x, y);
+		return (t == TT_SOLID) || (t == TT_WALL) || (t == TT_TURRET);
+	}
+
+	bool is_roughable(int x, int y) {
 		int t =  get_tile(x, y);
 		return (t == TT_SOLID) || (t == TT_WALL);
 	}
@@ -127,6 +186,8 @@ enum {
 };
 
 aabb2 cast_aabb(game* g, aabb2 self, vec2 delta, int* clipped);
+bool raycast(game* g, vec2 from, vec2 to);
+bool is_obstructed(game* g, const aabb2& bb);
 
 void add_particle(vec2 pos, vec2 vel, colour c, float s0, float s1, float s2, int max_t);
 void update_particles(game* g);

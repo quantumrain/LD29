@@ -78,7 +78,8 @@ void update_search(game* g, ivec2 start) {
 			if (t->search != 0xFFFFFFFF)
 				continue;
 
-			if (t->is_solid()) new_cost += 100;
+			if (t->type == TT_TURRET) new_cost += 10;
+			else if (t->type != TT_EMPTY) new_cost += 100;
 
 			t->search = new_cost;
 
@@ -155,7 +156,7 @@ void GameUpdate() {
 		for(int i = 0; i < MAP_WIDTH; i++) {
 			int t = g->get_tile(i, j);
 
-			if (t == TT_EMPTY) {
+			if (t == TT_EMPTY || t == TT_TURRET) {
 				int hash = ((i * 7) ^ (j * 3)) + (i + j);
 				hash ^= ((hash >> 3) * 9);
 
@@ -188,14 +189,14 @@ void GameUpdate() {
 		for(int i = 0; i < MAP_WIDTH; i++) {
 			int t = g->get_tile(i, j);
 
-			if (t == TT_EMPTY || t == TT_VOID) {
+			if (t == TT_EMPTY || t == TT_VOID || t == TT_TURRET) {
 				float f = 1.0f / 2.0f;
 				float a = 0.5f;
 
-				bool xn = g->is_solid(i - 1, j);
-				bool xp = g->is_solid(i + 1, j);
-				bool yn = g->is_solid(i, j - 1);
-				bool yp = g->is_solid(i, j + 1);
+				bool xn = g->is_roughable(i - 1, j);
+				bool xp = g->is_roughable(i + 1, j);
+				bool yn = g->is_roughable(i, j - 1);
+				bool yp = g->is_roughable(i, j + 1);
 
 				if (xn) draw_rect(vec2((float)i, (float)j), vec2((float)i + f, (float)j + 1), colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, a), colour(0.0f, 0.0f));
 				if (xp) draw_rect(vec2((float)i + 1, (float)j), vec2((float)i + 1 - f, (float)j + 1), colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, a), colour(0.0f, 0.0f));
@@ -203,10 +204,10 @@ void GameUpdate() {
 				if (yn) draw_rect(vec2((float)i, (float)j), vec2((float)i + 1, (float)j + f), colour(0.0f, a), colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
 				if (yp) draw_rect(vec2((float)i, (float)j + 1), vec2((float)i + 1, (float)j + 1 - f), colour(0.0f, a), colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
 
-				if (!xn && !yn && g->is_solid(i - 1, j - 1)) draw_tri(vec2((float)i, (float)j),			vec2((float)i + f, (float)j),			vec2((float)i, (float)j + f),			colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
-				if (!xp && !yn && g->is_solid(i + 1, j - 1)) draw_tri(vec2((float)i + 1, (float)j),		vec2((float)i + 1 - f, (float)j),		vec2((float)i + 1, (float)j + f),		colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
-				if (!xn && !yp && g->is_solid(i - 1, j + 1)) draw_tri(vec2((float)i, (float)j + 1),		vec2((float)i + f, (float)j + 1),		vec2((float)i, (float)j + 1 - f),		colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
-				if (!xp && !yp && g->is_solid(i + 1, j + 1)) draw_tri(vec2((float)i + 1, (float)j + 1),	vec2((float)i + 1 - f, (float)j + 1),	vec2((float)i + 1, (float)j + 1 - f),	colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
+				if (!xn && !yn && g->is_roughable(i - 1, j - 1)) draw_tri(vec2((float)i, (float)j),			vec2((float)i + f, (float)j),			vec2((float)i, (float)j + f),			colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
+				if (!xp && !yn && g->is_roughable(i + 1, j - 1)) draw_tri(vec2((float)i + 1, (float)j),		vec2((float)i + 1 - f, (float)j),		vec2((float)i + 1, (float)j + f),		colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
+				if (!xn && !yp && g->is_roughable(i - 1, j + 1)) draw_tri(vec2((float)i, (float)j + 1),		vec2((float)i + f, (float)j + 1),		vec2((float)i, (float)j + 1 - f),		colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
+				if (!xp && !yp && g->is_roughable(i + 1, j + 1)) draw_tri(vec2((float)i + 1, (float)j + 1),	vec2((float)i + 1 - f, (float)j + 1),	vec2((float)i + 1, (float)j + 1 - f),	colour(0.0f, a), colour(0.0f, 0.0f), colour(0.0f, 0.0f));
 			}
 			else {
 				bool c0 = g->get_tile(i - 1, j - 1) == TT_EMPTY;
@@ -251,14 +252,14 @@ void GameUpdate() {
 
 	for(int j = 0; j < MAP_HEIGHT; j++) {
 		for(int i = 0; i < MAP_WIDTH; i++) {
-			if (!g->is_solid(i, j)) {
+			if (!g->is_roughable(i, j)) {
 				float f = 1.0f / 8.0f;
 				float a = 1.0f / 16.0f;
 
-				bool xn = g->is_solid(i - 1, j);
-				bool xp = g->is_solid(i + 1, j);
-				bool yn = g->is_solid(i, j - 1);
-				bool yp = g->is_solid(i, j + 1);
+				bool xn = g->is_roughable(i - 1, j);
+				bool xp = g->is_roughable(i + 1, j);
+				bool yn = g->is_roughable(i, j - 1);
+				bool yp = g->is_roughable(i, j + 1);
 
 				int edge_tile = ((i + j) & 1) ? 144 : 145;
 
@@ -294,4 +295,13 @@ void GameUpdate() {
 
 	draw_entities(g);
 	draw_particles(g);
+
+	if (player* p = g->_player) {
+		float ratio = g_WinSize.y / (float)g_WinSize.x;
+
+		vec2 orig(-10.0f, -10.0f * ratio); orig += g->_cam_pos;
+
+		draw_string(orig + vec2(0.2f, 0.2f), 0.05f, TEXT_LEFT, colour(0.6f, 1.0f), "Health: %i", p->_health);
+		draw_string(orig + vec2(0.2f, 0.8f), 0.05f, TEXT_LEFT, colour(0.6f, 1.0f), "Metal: %i", p->_money);
+	}
 }

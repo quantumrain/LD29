@@ -4,19 +4,24 @@
 
 // entity
 
-entity::entity() : _flags(), _sprite(), _draw_flags(), _bb(0.0f, 1.0f) { }
+entity::entity(entity_type type) : _flags(), _type(type), _sprite(), _draw_flags(), _bb(0.0f, 1.0f) { }
 entity::~entity() { }
 
 void entity::destroy() { _flags |= FLAG_DESTROYED; }
 
+void entity::spawned(game* g) { }
 void entity::tick(game* g) { }
 void entity::on_hit_wall(game* g, int clipped) { }
+void entity::on_attacked(game* g) { }
 void entity::post_tick(game* g) { }
+void entity::render(game* g) { }
 
 // sys
 
 void tick_entities(game* g) {
-	for(auto e : g->_entities) {
+	for(uint32_t i = 0; i < g->_entities.size(); i++) {
+		entity* e = g->_entities[i];
+
 		if (e->_flags & entity::FLAG_DESTROYED)
 			continue;
 
@@ -36,19 +41,36 @@ void tick_entities(game* g) {
 
 void purge_entities(game* g) {
 	for(uint32_t i = 0; i < g->_entities.size(); ) {
-		if (g->_entities[i]->_flags & entity::FLAG_DESTROYED)	g->_entities.swap_erase(i);
-		else													i++;
+		entity* e = g->_entities[i];
+
+		if (e->_flags & entity::FLAG_DESTROYED) {
+			ivec2 p = to_ivec2(e->centre());
+
+			if (tile* t = g->get(p.x, p.y)) {
+				if (t->owner == e)
+					t->owner = 0;
+			}
+
+			g->_entities.swap_erase(i);
+		}
+		else
+			i++;
 	}
 }
 
 void draw_entities(game* g) {
-	for(auto e : g->_entities) {
+	for(uint32_t i = 0; i < g->_entities.size(); i++) {
+		entity* e = g->_entities[i];
+
 		if (e->_flags & entity::FLAG_DESTROYED)
 			continue;
 
 		//draw_rect(e->_bb.min, e->_bb.max, colour(0.2f, 0.2f));
 
-		draw_tile(e->centre() + e->_draw_off, 0.5f, colour(), e->_sprite, e->_draw_flags);
+		if (e->_flags & entity::FLAG_CUSTOM_RENDER)
+			e->render(g);
+		else
+			draw_tile(e->centre() + e->_draw_off, 0.5f, colour(), e->_sprite, e->_draw_flags);
 	}
 }
 
@@ -60,7 +82,12 @@ entity* spawn_entity(game* g, entity* ent, vec2 pos) {
 		ent->_bb.max = pos + s;
 	}
 
-	return g->_entities.push_back(ent);
+	if (!g->_entities.push_back(ent))
+		return 0;
+
+	ent->spawned(g);
+
+	return ent;
 }
 
 // cast_aabb
@@ -121,7 +148,8 @@ aabb2 cast_aabb(game* g, aabb2 self, vec2 delta, int* clipped) {
 
 void avoid_others(game* g, entity* self) {
 	for(auto e : g->_entities) {
-		if (e == self) continue; // todo: flag for player to avoid avoiding him!
+		if (e == self) continue;
+		if (e->_type != ET_BUG) continue;
 
 		vec2 delta = self->centre() - e->centre();
 
@@ -141,4 +169,53 @@ void avoid_others(game* g, entity* self) {
 		self->_vel += v * DT;
 		//e->_vel -= v * DT;
 	}
+}
+
+// raycast
+
+int sign(float v) { return v < 0.0f ? -1 : (v > 0.0f ? 1 : 0); }
+
+bool raycast(game* g, vec2 from, vec2 to) {
+	ivec2 cur(fast_floor(from.x), fast_floor(from.y));
+	ivec2 end(fast_floor(to.x), fast_floor(to.y));
+	ivec2 sign(sign(to.x - from.x), sign(to.y - from.y));
+	vec2 abs_delta(abs(to.x - from.x), abs(to.y - from.y));
+	vec2 delta_t(vec2(1.0f) / abs_delta);
+	vec2 lb(to_vec2(cur));
+	vec2 ub(lb + vec2(1.0f));
+	vec2 t(vec2((from.x > to.x) ? (from.x - lb.x) : (ub.x - from.x), (from.y > to.y) ? (from.y - lb.y) : (ub.y - from.y)) / abs_delta);
+
+	for(;;) {
+		if (g->is_solid(cur.x, cur.y))
+			return true;
+
+		if (t.x <= t.y) {
+			if (cur.x == end.x) break;
+			t.x += delta_t.x;
+			cur.x += sign.x;
+		}
+		else {
+			if (cur.y == end.y) break;
+			t.y += delta_t.y;
+			cur.y += sign.y;
+		}
+	}
+
+	return false;
+}
+
+// obstructed
+
+bool is_obstructed(game* g, const aabb2& bb) {
+	for(u32 i = 0; i < g->_entities.size(); i++) {
+		entity* e = g->_entities[i];
+
+		if (e->_flags & entity::FLAG_DESTROYED)
+			continue;
+
+		if (overlaps_xy(e->_bb, bb))
+			return true;
+	}
+
+	return false;
 }

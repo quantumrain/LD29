@@ -41,6 +41,8 @@ inline float square_signed(float v)												{ return v * fabs(v); }
 inline int fast_floor(float f)													{ int i = (int)f; return f < i ? i - 1 : i; }
 inline int fast_ceil(float f)													{ int i = (int)f; return f > i ? i + 1 : i; }
 
+inline float normalise_radians(float a) { return fmodf(fmodf(a + PI, PI_2) + PI_2, PI_2) - PI; }
+
 template<typename T>
 struct array {
 	array() : _elems(), _size(), _cap() { }

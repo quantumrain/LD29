@@ -58,6 +58,7 @@ enum key_press {
 	KEY_RESET,
 	KEY_CHEAT,
 	KEY_MODE,
+	KEY_PLACE,
 	KEY_MAX
 };
 

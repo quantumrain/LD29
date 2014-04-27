@@ -98,6 +98,7 @@ inline bool operator!=(ivec2& lhs, ivec2& rhs) { return lhs.x != rhs.x || lhs.y 
 inline vec2 to_vec2(ivec2 v) { return vec2((float)v.x, (float)v.y); }
 inline ivec2 to_ivec2(vec2 v) { return ivec2(fast_floor(v.x), fast_floor(v.y)); }
 inline vec2 rotation(float a) { return vec2(cosf(a), sinf(a)); }
+inline float rotation_of(const vec2& v) { return atan2f(v.y, v.x); }
 
 inline vec2 min(const vec2& v0, const vec2& v1) { return vec2(min(v0.x, v1.x), min(v0.y, v1.y)); }
 inline vec3 min(const vec3& v0, const vec3& v1) { return vec3(min(v0.x, v1.x), min(v0.y, v1.y), min(v0.z, v1.z)); }

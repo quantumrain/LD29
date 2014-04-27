@@ -7,7 +7,7 @@ const int TIME_TILL_GROUNDED = 4;
 const int JUMP_LAUNCH_TIME = 8;
 const int FIRE_TIME = 15;
 
-player::player() : _on_ground(false), _last_clipped(), _jump_latch(), _jump_ground(), _jump_launch(), _wall_left(), _wall_right(), _wall_dragging(), _ground_time(), _fire_latch(), _fire_time(), _anim(), _up_latch(), _down_latch() {
+player::player() : entity(ET_PLAYER), _on_ground(false), _last_clipped(), _jump_latch(), _jump_ground(), _jump_launch(), _wall_left(), _wall_right(), _wall_dragging(), _ground_time(), _fire_latch(), _fire_time(), _anim(), _money(5), _place_latch(), _health(8) {
 	_bb.max = vec2(4.0f / 16.0f, 12.0f / 16.0f);
 	_draw_off = vec2(0.0f, -2.0f / 16.0f);
 }
@@ -18,6 +18,9 @@ player::~player() {
 void player::tick(game* g) {
 	_vel.x *= _on_ground ? 0.75f : 0.95f;
 	_vel.y = (_vel.y * 0.99f) + 0.0075f;
+
+	if (_on_ground && (_ground_time == 0))
+		SoundPlay(kSid_Dit, 4.0f, 0.25f);
 
 	if (_on_ground)	_ground_time++;
 	else			_ground_time = 0;
@@ -32,35 +35,49 @@ void player::tick(game* g) {
 		if (is_key_pressed(KEY_RIGHT)) _draw_flags = 0;
 	}
 
-	ivec2 tile_target = to_ivec2(centre() + vec2((_draw_flags & DT_FLIP_X) ? -0.1f : 0.1f, 0.0f));
+	ivec2 target_off;
 
-	bool is_left_right = is_key_pressed(KEY_LEFT) || is_key_pressed(KEY_RIGHT);
-
-	if (!is_key_pressed(KEY_UP)) _up_latch = false;
-	if (!is_key_pressed(KEY_DOWN) || (_ground_time <= TIME_TILL_GROUNDED)) _down_latch = false;
-
-	if (is_key_pressed(KEY_UP) && !is_left_right && !_up_latch)
-		tile_target.y--;
-	else if (is_key_pressed(KEY_DOWN) && !is_left_right && !_down_latch)
-		tile_target.y++;
-	else
-		tile_target.x += (_draw_flags & DT_FLIP_X) ? -1 : 1;
-
-	if (g->is_solid(tile_target.x, tile_target.y)) {
-		if (is_key_pressed(KEY_LEFT) && (_last_clipped & CLIPPED_XN)) _fire_latch = false;
-		if (is_key_pressed(KEY_RIGHT) && (_last_clipped & CLIPPED_XP)) _fire_latch = false;
-		if (is_key_pressed(KEY_UP) && !_up_latch) _fire_latch = false;
-		if (is_key_pressed(KEY_DOWN) && !_down_latch) _fire_latch = false;
+	if (is_key_pressed(KEY_LEFT) || is_key_pressed(KEY_RIGHT)) {
+		if (is_key_pressed(KEY_LEFT) && !is_key_pressed(KEY_RIGHT))			target_off.x = -1;
+		else if (is_key_pressed(KEY_RIGHT) && !is_key_pressed(KEY_LEFT))	target_off.x = 1;
+	}
+	else if (is_key_pressed(KEY_UP) || is_key_pressed(KEY_DOWN)) {
+		if (is_key_pressed(KEY_UP) && !is_key_pressed(KEY_DOWN))		target_off.y = -1;
+		else if (is_key_pressed(KEY_DOWN) && !is_key_pressed(KEY_UP))	target_off.y = 1;
 	}
 
-	if ((_ground_time > TIME_TILL_GROUNDED) && is_key_pressed(KEY_FIRE)) {
-		if (!_fire_latch && _fire_time <= 0) {
-			_fire_time = FIRE_TIME;
-			_fire_latch = true;
-			_fire_target = tile_target;
+	if (!target_off.x && !target_off.y)
+		target_off.x = (_draw_flags & DT_FLIP_X) ? -1 : 1;
 
-			if (is_key_pressed(KEY_UP)) _up_latch = true;
-			if (is_key_pressed(KEY_DOWN)) _down_latch = true;
+	vec2 sample_target = centre();
+
+	if (target_off.x == 0) {
+		ivec2 p = to_ivec2(sample_target);
+
+		if (!(_draw_flags & DT_FLIP_X) && !g->is_solid(p.x + 1, p.y)) sample_target.x += 0.2f;
+		if ((_draw_flags & DT_FLIP_X) && !g->is_solid(p.x - 1, p.y)) sample_target.x -= 0.2f;
+	}
+
+	ivec2 tile_target = to_ivec2(sample_target);
+
+	tile_target += target_off;
+
+	if (_fire_time <= 0) {
+		if (g->is_solid(tile_target.x, tile_target.y)) {
+			if ((target_off.x == -1) && (_last_clipped & CLIPPED_XN)) _fire_latch = false;
+			if ((target_off.x == 1) && (_last_clipped & CLIPPED_XP)) _fire_latch = false;
+			if (target_off.y == 1) _fire_latch = false;
+			if (target_off.y == -1) _fire_latch = false;
+		}
+	}
+
+	if (is_key_pressed(KEY_FIRE)) {
+		if (_ground_time > TIME_TILL_GROUNDED) {
+			if (!_fire_latch && _fire_time <= 0) {
+				_fire_time = FIRE_TIME;
+				_fire_latch = true;
+				_fire_target = tile_target;
+			}
 		}
 	}
 	else
@@ -69,20 +86,41 @@ void player::tick(game* g) {
 	if (_ground_time <= TIME_TILL_GROUNDED)
 		_fire_time = 0;
 
-	if (_fire_time > 0) {
+	if (is_key_pressed(KEY_PLACE)) {
+		if (!_place_latch && (_fire_time <= 0) && (_ground_time > TIME_TILL_GROUNDED)) {
+			if (_money >= 3) {
+				aabb2 box(to_vec2(tile_target) + 0.05f, to_vec2(tile_target) + 0.95f);
 
+				if (!is_obstructed(g, box)) {
+					if (g->get_tile(tile_target.x, tile_target.y) == TT_EMPTY) {
+						spawn_entity(g, new turret(), (box.min + box.max) * 0.5f);
+						_place_latch = true;
+						_money -= 3;
+					}
+				}
+			}
+		}
+	}
+	else
+		_place_latch = false;
+
+	if (_fire_time > 0) {
 		if (g->is_solid(_fire_target.x, _fire_target.y)) {
 			colour c(0.0f, 1.0f, 1.0f, 1.0f);
 
 			c *= colour(g_game_rand.frand(), 1.0f);
 			
 			add_particle(to_vec2(_fire_target) + g_game_rand.v2rand(vec2(0.1f), vec2(0.9f)), g_game_rand.sv2rand(vec2(0.0f)), c, 0.0f, 0.15f, 0.15f, 10);
+
+			SoundPlay(kSid_Buzz, 4.0f, 0.25f);
 		}
+
+		SoundPlay(kSid_Dit, 4.0f, 0.25f);
 
 		if (--_fire_time == 0) {
 			if (tile* t = g->get(_fire_target.x, _fire_target.y)) {
 				if (t->type == TT_SOLID) {
-					if (++t->damage >= t->max_damage()) {
+					if ((t->damage += 100) >= t->max_damage()) {
 						t->type = TT_EMPTY;
 						t->damage = 0;
 
@@ -90,6 +128,9 @@ void player::tick(game* g) {
 							colour c(0.0f, 0.0f, 0.0f, 1.0f);
 							add_particle(to_vec2(_fire_target) + g_game_rand.v2rand(vec2(0.1f), vec2(0.9f)), vec2(0.0f, 0.02f), c, 0.3f, 0.3f, 0.0f, 10);
 						}
+
+						if (t->ore)
+							spawn_entity(g, new gem(), to_vec2(_fire_target) + vec2(0.5f));
 					}
 					else {
 						if (is_key_pressed(KEY_FIRE))
@@ -107,6 +148,8 @@ void player::tick(game* g) {
 				_jump_launch = JUMP_LAUNCH_TIME;
 				_jump_latch = true;
 				_on_ground = false;
+
+				SoundPlay(kSid_Dit, 1.0f, 0.5f);
 			}
 			else if (!_on_ground && !_jump_latch) {
 				if (_wall_left > 0)			_vel.x += 0.05f;
@@ -120,6 +163,8 @@ void player::tick(game* g) {
 					_wall_left = 0;
 					_wall_right = 0;
 					_on_ground = false;
+
+					SoundPlay(kSid_Dit, 1.0f, 0.5f);
 				}
 			}
 		}
@@ -183,9 +228,9 @@ void player::tick(game* g) {
 				_sprite = 4 + ((_anim / 6) % 4);
 			}
 			else {
-				if (is_key_pressed(KEY_UP) && !is_left_right && !_up_latch)
+				if (target_off.y == -1)
 					_sprite = 26 + ((_anim / 5) % 4);
-				else if (is_key_pressed(KEY_DOWN) && !is_left_right && !_down_latch)
+				else if (target_off.y == 1)
 					_sprite = 19 + ((_anim / 5) % 4);
 				else
 					_sprite = ((_anim / 5) % 4);
