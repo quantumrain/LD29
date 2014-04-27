@@ -80,8 +80,7 @@ void Panic(const char* msg);
 enum SoundId {
 	kSid_Dit,
 	kSid_Buzz,
-	kSid_Switch,
-	kSid_Win,
+	kSid_GemCollect,
 	kSid_BugDies,
 	kSid_BugHurt,
 	kSid_TurretDies,

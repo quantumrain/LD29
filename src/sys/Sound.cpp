@@ -110,9 +110,8 @@ void SoundInit()
 
 	load_riff(gXAudio, &gSound[kSid_Dit],		"data\\dit.wav");
 	load_riff(gXAudio, &gSound[kSid_Buzz],		"data\\buzz.wav");
-	load_riff(gXAudio, &gSound[kSid_Switch],	"data\\switch.wav");
-	load_riff(gXAudio, &gSound[kSid_Win],		"data\\win.wav");
 
+	load_riff(gXAudio, &gSound[kSid_GemCollect],	"data\\gem_collect.wav");
 	load_riff(gXAudio, &gSound[kSid_BugDies],		"data\\bug_dies.wav");
 	load_riff(gXAudio, &gSound[kSid_BugHurt],		"data\\bug_hurt.wav");
 	load_riff(gXAudio, &gSound[kSid_TurretDies],	"data\\turret_dies.wav");

@@ -118,19 +118,36 @@ void GameUpdate() {
 		float ratio = g_WinSize.y / (float)g_WinSize.x;
 		vec2 orig(-10.0f, -10.0f * ratio);
 
-		draw_string(vec2(0.0f, -4.0f), 0.15f, TEXT_CENTRE, colour(0.5f, 0.5f, 0.8f, 1.0f), "Tunnel Defense");
-		draw_string(vec2(0.0f, -2.5f), 0.05f, TEXT_CENTRE, colour(0.3f, 0.3f, 0.6f, 1.0f), "LD29 - Beneath the Surface");
+		draw_string(vec2(0.0f, -4.0f), 0.15f, TEXT_CENTRE, colour(0.5f, 0.5f, 1.0f, 1.0f), "Tunnel Defense");
 
-		float y = 0.5f;
+		float y = -2.5f;
+
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.3f, 0.6f, 1.0f), "LD29 - Beneath the Surface"); y += 0.5f;
+
+		y += 0.5f;
+
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.6f, 0.3f, 0.3f, 1.0f), "Dig for your life, The creeps are coming and the"); y += 0.5f;
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.6f, 0.3f, 0.3f, 1.0f), "only safe place is underground! Collect resources"); y += 0.5f;
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.6f, 0.3f, 0.3f, 1.0f), "and build turrets (3 metal) to protect yourself."); y += 0.5f;
+
+		y += 0.25f;
 
 		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Move + Aim - \001\002\003\004"); y += 0.5f;
 		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Jump - Z"); y += 0.5f;
 		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Zap Block - X"); y += 0.5f;
-		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Place Turret - C"); y += 0.75f;
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Place Turret - C"); y += 0.5f;
+
+		y += 0.25f;
+
 		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.15f, 0.3f, 0.15f, 1.0f), "Alternate Controls - WASD, I, O, P"); y += 0.5f;
 
-		draw_string(vec2(0.0f, 4.0f), 0.05f, TEXT_CENTRE, colour(0.5f, 0.5f, 0.5f, 1.0f), "press SPACE to START");
+		y += 0.25f;
 
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.5f, 0.5f, 0.5f, 1.0f), "press SPACE to START"); y+= 0.5f;
+
+		y += 0.5f;
+
+		draw_string(vec2(0.0f, y), 0.035f, TEXT_CENTRE, colour(0.15f, 0.15f, 0.15f, 1.0f), "by Stephen Cakebread @quantumrain");
 
 		if (is_key_pressed(KEY_FIRE) || is_key_pressed(KEY_ALT_FIRE)) g_title = false;
 
@@ -166,8 +183,8 @@ void GameUpdate() {
 		if (bug* e = spawn_entity(&g_game, new bug(), pos)) {
 		}
 
-		g->_diff += 0.02f;
-		g->_spawn_time = 120 - (int)(g->_diff * 10.0f);
+		g->_diff += g->_diff * 0.02f;
+		g->_spawn_time = clamp(120 - (int)(g->_diff * 10.0f), 2, 120);
 	}
 
 	tick_entities(g);
@@ -365,5 +382,13 @@ void GameUpdate() {
 			draw_rect(pt - vec2(0.025f), pt + vec2(0.325f, 0.425f), colour(f, f, f, 1.0f));
 			draw_rect(pt, pt + vec2(0.3f, 0.4f), (i < p->_money) ? colour(0.2f, 0.2f, 0.6f, 1.0f) : colour(0.2f, 0.2f, 0.2f, 1.0f));
 		}
+
+		if (g->_diff == 1.0f) {
+			draw_string(orig + vec2(15.0f, 1.0f), 0.05f, TEXT_CENTRE, colour(0.6f, 1.0f), "FIRST WAVE INCOMING IN: %i.%02i", g->_spawn_time / 60, ((g->_spawn_time % 60) * 100) / 60);
+		}
+	}
+	else {
+		draw_string(g->_cam_pos, 0.04f, TEXT_CENTRE, colour(0.6f, 1.0f), "GAME OVER");
+		draw_string(g->_cam_pos + vec2(0.0f, 1.0f), 0.04f, TEXT_CENTRE, colour(0.3f, 1.0f), "PRESS ESCAPE TO RESTART");
 	}
 }

@@ -78,9 +78,9 @@ void turret::tick(game* g) {
 			if (fabsf(rd) < 0.2f) {
 				if (entity* e = spawn_entity(g, new bullet, centre())) {
 					e->_vel = rotation(rt) * 0.5f;
-					_reload = 25;
+					_reload = 20;
 					_recoil = 1.0f;
-					SoundPlay(kSid_TurretFire, g_game_rand.frand(0.9f, 1.1f), g_game_rand.frand(0.4f, 0.5f));
+					SoundPlay(kSid_TurretFire, g_game_rand.frand(0.9f, 1.1f), g_game_rand.frand(0.2f, 0.4f));
 				}
 			}
 		}

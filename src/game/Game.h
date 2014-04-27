@@ -91,6 +91,8 @@ struct gem : entity {
 	virtual void tick(game* g);
 	virtual void on_hit_wall(game* g, int clipped);
 	virtual void post_tick(game* g);
+
+	bool _buzz_latch;
 };
 
 struct turret : entity {

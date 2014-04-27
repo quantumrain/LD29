@@ -6,6 +6,7 @@ gem::gem() : entity(ET_GEM) {
 	_bb.max = vec2(4.0f / 16.0f, 4.0f / 16.0f);
 	_draw_off = vec2(0.0f, -1.0f / 16.0f);
 	_sprite = 64;
+	_buzz_latch = false;
 }
 
 gem::~gem() {
@@ -29,9 +30,18 @@ void gem::post_tick(game* g) {
 			if (p->_money < 8) {
 				p->_money += 1;
 				p->_flash_money = 4;
-				SoundPlay(kSid_Switch, 0.5f, 1.5f);
+				SoundPlay(kSid_GemCollect, 0.5f, 0.5f);
 				destroy();
 			}
+			else {
+				if (!_buzz_latch) {
+					SoundPlay(kSid_Buzz, 0.5f, 0.5f);
+					p->_flash_money = 4;
+					_buzz_latch = true;
+				}
+			}
 		}
+		else
+			_buzz_latch = false;
 	}
 }

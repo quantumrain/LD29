@@ -87,7 +87,7 @@ void bug::tick(game* g) {
 	avoid_others(g, this);
 
 	if (player* p = g->_player) {
-		if (length_sq(p->centre() - centre()) < square(0.4f)) {
+		if (length_sq(p->centre() - centre()) < square(0.5f)) {
 			for(int i = 0; i < 10; i++) {
 				colour c(1.0f, 0.2f, 0.2f, 1.0f);
 				add_particle(centre() + _draw_off + g_game_rand.sv2rand(vec2(0.3f)), vec2(0.0f, 0.02f), c, 0.3f, 0.3f, 0.0f, 10);
@@ -123,7 +123,7 @@ void bug::on_hit_wall(game* g, int clipped) {
 void bug::on_attacked(game* g) {
 	if (_flash_t <= 0) {
 		_flash_t = 4;
-		SoundPlay(kSid_BugHurt, g_game_rand.frand(0.9f, 1.1f), g_game_rand.frand(0.4f, 0.5f));
+		SoundPlay(kSid_BugHurt, g_game_rand.frand(0.9f, 1.1f), g_game_rand.frand(0.2f, 0.3f));
 	}
 
 	if (++_damage >= (5 * g->_diff)) {
@@ -132,7 +132,7 @@ void bug::on_attacked(game* g) {
 			add_particle(centre() + _draw_off + g_game_rand.sv2rand(vec2(0.3f)), vec2(0.0f, 0.02f), c, 0.3f, 0.3f, 0.0f, 10);
 		}
 
-		SoundPlay(kSid_BugDies, g_game_rand.frand(0.9f, 1.1f), g_game_rand.frand(0.3f, 0.4f));
+		SoundPlay(kSid_BugDies, g_game_rand.frand(0.9f, 1.1f), g_game_rand.frand(0.2f, 0.4f));
 
 		destroy();
 	}

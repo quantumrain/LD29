@@ -5,7 +5,7 @@
 const int JUMP_GROUND_GRACE = 8;
 const int TIME_TILL_GROUNDED = 4;
 const int JUMP_LAUNCH_TIME = 8;
-const int FIRE_TIME = 3;
+const int FIRE_TIME = 5;
 
 player::player() : entity(ET_PLAYER), _on_ground(false), _last_clipped(), _jump_latch(), _jump_ground(), _jump_launch(), _wall_left(), _wall_right(), _wall_dragging(), _ground_time(), _fire_latch(), _fire_time(), _anim(), _money(5), _place_latch(), _health(8) {
 	_bb.max = vec2(4.0f / 16.0f, 12.0f / 16.0f);
@@ -127,15 +127,20 @@ void player::tick(game* g) {
 			
 			add_particle(to_vec2(_fire_target) + g_game_rand.v2rand(vec2(0.1f), vec2(0.9f)), g_game_rand.sv2rand(vec2(0.0f)), c, 0.0f, 0.15f, 0.15f, 10);
 
-			SoundPlay(kSid_Buzz, 4.0f, 0.25f);
+			if (g_game_rand.rand(0, 1) == 0) {
+				SoundPlay(kSid_Buzz, g_game_rand.frand(3.0f, 4.0f), g_game_rand.frand(0.1f, 0.2f));
+			}
 		}
 
-		SoundPlay(kSid_Dit, 4.0f, 0.25f);
+		if (g_game_rand.rand(0, 1) == 0)
+			SoundPlay(kSid_Dit, g_game_rand.frand(3.0f, 4.0f), g_game_rand.frand(0.2f, 0.3f));
 
 		if (--_fire_time == 0) {
 			if (tile* t = g->get(_fire_target.x, _fire_target.y)) {
 				if (t->type == TT_SOLID) {
-					if ((t->damage += 20) >= t->max_damage()) {
+					int dmg = clamp(30 - max(_fire_target.y - 10, 0), 2, 30);
+
+					if ((t->damage += dmg) >= t->max_damage()) {
 						t->type = TT_EMPTY;
 						t->damage = 0;
 
