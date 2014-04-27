@@ -13,6 +13,7 @@ struct vec3 {
 
 	vec3(float xyz = 0) : x(xyz), y(xyz), z(xyz) { }
 	vec3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) { }
+	vec3(vec2 xy, float z_) : x(xy.x), y(xy.y), z(z_) { }
 };
 
 struct vec4 {
@@ -95,7 +96,16 @@ inline bool operator==(ivec2& lhs, ivec2& rhs) { return lhs.x == rhs.x && lhs.y 
 inline bool operator!=(ivec2& lhs, ivec2& rhs) { return lhs.x != rhs.x || lhs.y != rhs.y; }
 
 inline vec2 to_vec2(ivec2 v) { return vec2((float)v.x, (float)v.y); }
+inline ivec2 to_ivec2(vec2 v) { return ivec2(fast_floor(v.x), fast_floor(v.y)); }
 inline vec2 rotation(float a) { return vec2(cosf(a), sinf(a)); }
+
+inline vec2 min(const vec2& v0, const vec2& v1) { return vec2(min(v0.x, v1.x), min(v0.y, v1.y)); }
+inline vec3 min(const vec3& v0, const vec3& v1) { return vec3(min(v0.x, v1.x), min(v0.y, v1.y), min(v0.z, v1.z)); }
+inline vec4 min(const vec4& v0, const vec4& v1) { return vec4(min(v0.x, v1.x), min(v0.y, v1.y), min(v0.z, v1.z), min(v0.w, v1.w)); }
+
+inline vec2 max(const vec2& v0, const vec2& v1) { return vec2(max(v0.x, v1.x), max(v0.y, v1.y)); }
+inline vec3 max(const vec3& v0, const vec3& v1) { return vec3(max(v0.x, v1.x), max(v0.y, v1.y), max(v0.z, v1.z)); }
+inline vec4 max(const vec4& v0, const vec4& v1) { return vec4(max(v0.x, v1.x), max(v0.y, v1.y), max(v0.z, v1.z), max(v0.w, v1.w)); }
 
 inline float sum(const vec2& v) { return v.x + v.y; }
 inline float sum(const vec3& v) { return v.x + v.y + v.z; }
@@ -117,6 +127,7 @@ inline vec2 normalise(const vec2& v) { return v * vec2(1.0f / length(v)); }
 inline vec3 normalise(const vec3& v) { return v * vec3(1.0f / length(v)); }
 inline vec4 normalise(const vec4& v) { return v * vec4(1.0f / length(v)); }
 
+inline vec2 perp(const vec2& v) { return vec2(-v.y, v.x); }
 inline float cross(const vec2& v0, const vec2& v1) { return v0.x * v1.y - v1.x * v0.y; }
 inline vec3 cross(const vec3& v0, const vec3& v1) { return vec3(v0.y * v1.z - v1.y * v0.z, v0.z * v1.x - v1.z * v0.x, v0.x * v1.y - v1.x * v0.y); }
 
@@ -144,5 +155,25 @@ inline colour operator+(const colour& lhs, const colour& rhs) { return colour(lh
 inline colour operator-(const colour& lhs, const colour& rhs) { return colour(lhs.r - rhs.r, lhs.g - rhs.g, lhs.b - rhs.b, lhs.a - rhs.a); }
 inline colour operator*(const colour& lhs, const colour& rhs) { return colour(lhs.r * rhs.r, lhs.g * rhs.g, lhs.b * rhs.b, lhs.a * rhs.a); }
 inline colour operator/(const colour& lhs, const colour& rhs) { return colour(lhs.r / rhs.r, lhs.g / rhs.g, lhs.b / rhs.b, lhs.a / rhs.a); }
+
+inline colour& operator+=(colour& lhs, const colour& rhs) { lhs.r += rhs.r; lhs.g += rhs.g; lhs.b += rhs.b; lhs.a += rhs.a; return lhs; }
+inline colour& operator-=(colour& lhs, const colour& rhs) { lhs.r -= rhs.r; lhs.g -= rhs.g; lhs.b -= rhs.b; lhs.a -= rhs.a; return lhs; }
+inline colour& operator*=(colour& lhs, const colour& rhs) { lhs.r *= rhs.r; lhs.g *= rhs.g; lhs.b *= rhs.b; lhs.a *= rhs.a; return lhs; }
+inline colour& operator/=(colour& lhs, const colour& rhs) { lhs.r /= rhs.r; lhs.g /= rhs.g; lhs.b /= rhs.b; lhs.a /= rhs.a; return lhs; }
+
+struct aabb2 {
+	vec2 min;
+	vec2 max;
+
+	aabb2() { }
+	aabb2(vec2 min_, vec2 max_) : min(min_), max(max_) { }
+};
+
+inline bool overlaps_x(const aabb2& a, const aabb2& b) { return (a.max.x > b.min.x) && (a.min.x < b.max.x); }
+inline bool overlaps_y(const aabb2& a, const aabb2& b) { return (a.max.y > b.min.y) && (a.min.y < b.max.y); }
+inline bool overlaps_xy(const aabb2& a, const aabb2& b) { return overlaps_x(a, b) && overlaps_y(a, b); }
+inline aabb2 include(const aabb2& a, vec2 p) { return aabb2(min(a.min, p), max(a.max, p)); }
+inline aabb2 inflate(const aabb2& a, vec2 inflate_by) { return aabb2(a.min - inflate_by, a.max + inflate_by); }
+inline aabb2 expand_toward(const aabb2& a, vec2 d) { return aabb2(vec2((d.x < 0.0f) ? a.min.x + d.x : a.min.x, (d.y < 0.0f) ? a.min.y + d.y : a.min.y), vec2((d.x > 0.0f) ? a.max.x + d.x : a.max.x, (d.y > 0.0f) ? a.max.y + d.y : a.max.y)); }
 
 #endif // VEC_H

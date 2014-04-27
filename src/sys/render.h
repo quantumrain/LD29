@@ -50,11 +50,27 @@ struct Vertex {
 void set_camera(vec2 centre, float width);
 void set_camera_3d(mat44 camera, float width);
 vec2 to_game(vec2 screen);
+void draw_tri(vec2 p0, vec2 p1, vec2 p2, colour col);
+void draw_tri(vec2 p0, vec2 p1, vec2 p2, colour c0, colour c1, colour c2);
 void draw_rect(vec2 p0, vec2 p1, colour c);
 void draw_rect(vec2 p0, vec2 p1, colour c0, colour c1, colour c2, colour c3);
 void draw_quad(vec2 p0, vec2 p1, vec2 p2, vec2 p3, colour c0, colour c1, colour c2, colour c3);
 void draw_font_rect(vec2 p0, vec2 p1, vec2 uv0, vec2 uv1, colour col);
 void draw_tri_3d(vec3 p0, vec3 p1, vec3 p2, colour col);
+
+enum draw_tile_flags {
+	DT_ROT_0 = 0,
+	DT_ROT_90 = 1,
+	DT_ROT_180 = 2,
+	DT_ROT_270 = 3,
+	DT_FLIP_X = 4,
+	DT_FLIP_Y = 8
+};
+
+void draw_tile(vec2 p0, vec2 p1, vec2 p2, vec2 p3, colour c0, colour c1, colour c2, colour c3, int tile_num, int flags);
+void draw_tile(vec2 c, float s, float rot, colour col, int tile_num, int flags);
+void draw_tile(vec2 c, float s, colour col, int tile_num, int flags);
+void draw_tile(vec2 p0, vec2 p1, colour col, int tile_num, int flags);
 
 enum font_flags {
 	TEXT_LEFT = 1,

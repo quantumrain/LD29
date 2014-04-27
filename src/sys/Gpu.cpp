@@ -137,7 +137,16 @@ namespace gpu
 
 			if (SUCCEEDED(tex->tex->LockRect(0, &lr, 0, D3DLOCK_DISCARD))) {
 				for(int y = 0; y < height; y++) {
-					memcpy((uint8_t*)lr.pBits + y * lr.Pitch, initial_data + y * width * 4, width * 4);
+					//memcpy((uint8_t*)lr.pBits + y * lr.Pitch, initial_data + y * width * 4, width * 4);
+					uint8_t* d = (uint8_t*)lr.pBits + y * lr.Pitch;
+					uint8_t* s = initial_data + y * width * 4;
+
+					for(int x = 0; x < width; x++, d += 4, s+= 4) {
+						d[0] = s[2];
+						d[1] = s[1];
+						d[2] = s[0];
+						d[3] = s[3];
+					}
 				}
 
 				tex->tex->UnlockRect(0);
@@ -164,6 +173,8 @@ namespace gpu
 		gDevice->SetSamplerState(slot, D3DSAMP_MINFILTER, bilin ? D3DTEXF_LINEAR : D3DTEXF_POINT);
 		gDevice->SetSamplerState(slot, D3DSAMP_MAGFILTER, bilin ? D3DTEXF_LINEAR : D3DTEXF_POINT);
 		gDevice->SetSamplerState(slot, D3DSAMP_MIPFILTER, bilin ? D3DTEXF_LINEAR : D3DTEXF_POINT);
+
+		gDevice->SetSamplerState(slot, D3DSAMP_SRGBTEXTURE, 1);
 	}
 
 	void SetTexture(int slot, Texture2d* tex)
@@ -297,6 +308,8 @@ namespace gpu
 		} else {
 			gDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 		}
+
+		gDevice->SetRenderState(D3DRS_SRGBWRITEENABLE, TRUE);
 
 		gDevice->SetVertexDeclaration(decl->decl);
 		gDevice->SetStreamSource(0, vb->vb, 0, sizeof(Vertex));

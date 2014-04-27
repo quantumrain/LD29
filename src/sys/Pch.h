@@ -15,5 +15,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <math.h>
+#include <assert.h>
 
 #endif // PCH_H

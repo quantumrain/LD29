@@ -72,7 +72,7 @@ bool load_riff(IXAudio2* xAudio, Sound* sound, const char* path) {
 	if ((sound->data = new uint8_t[ch_data.size]) == 0)
 		return false;
 
-	memcpy(&sound->wfx, ch_fmt.data, Min(sizeof(sound->wfx), ch_fmt.size));
+	memcpy(&sound->wfx, ch_fmt.data, min(sizeof(sound->wfx), ch_fmt.size));
 	memcpy(sound->data, ch_data.data, ch_data.size);
 
 	sound->buffer.AudioBytes	= ch_data.size;

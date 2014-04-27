@@ -1,16 +1,7 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-const float DT = 1.0f / 60.0f;
-const float PI = 3.14159f;
-
-template<typename T> T Max(T a, T b) { return (b < a) ? a : b; }
-template<typename T> T Min(T a, T b) { return (a < b) ? a : b; }
-template<typename T> T Clamp(T v, T low, T high) { return (v < low) ? low : ((v > high) ? high : v); }
-template<typename T> T Lerp(T a, T b, float t) { return a + (b - a) * t; }
-inline float Square(float f) { return f * f; }
-template<typename T> void Swap(T& a, T& b) { T t = b; b = a; a = t; }
-
+#include "ut.h"
 #include "vec.h"
 #include "render.h"
 
@@ -75,6 +66,8 @@ extern int gKey;
 extern DWORD gKeyDown[KEY_MAX];
 extern ivec2 gMousePos;
 extern int gMouseButtons;
+
+bool is_key_pressed(key_press k);
 
 // Debug
 

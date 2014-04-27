@@ -138,7 +138,7 @@ int random::rand(int min, int max) {
 	if (min >= max)
 		return min;
 
-	return min + (rand64() % (max - min)); // TODO: biased
+	return min + (rand64() % (max - min + 1)); // TODO: biased
 }
 
 float random::frand(float max)							{ return (float)(frand64() * max); }

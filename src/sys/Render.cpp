@@ -57,78 +57,68 @@ vec2 to_game(vec2 screen) {
 	return screen / vec2(gCam.z, -gCam.w) - vec2(gCam.x, gCam.y);
 }
 
-void draw_rect(vec2 p0, vec2 p1, colour col) {
+void draw_tri(vec2 p0, vec2 p1, vec2 p2, colour col) {
+	draw_tri(p0, p1, p2, col, col, col);
+}
+
+void draw_tri(vec2 p0, vec2 p1, vec2 p2, colour c0, colour c1, colour c2) {
 	if ((gRectVertCount + 6) > kMaxRectVerts)
-	{
-		DebugLn("DrawRect overflow");
 		return;
-	}
+
+	c0 *= colour(c0.r, c0.g, c0.b, 1.0f);
+	c1 *= colour(c1.r, c1.g, c1.b, 1.0f);
+	c2 *= colour(c2.r, c2.g, c2.b, 1.0f);
 
 	Vertex* v = &gRectVerts[gRectVertCount];
 
-	gRectVertCount += 6;
+	gRectVertCount += 3;
 
-	// t0
-	v->x = p0.x;	v->y = p0.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = col.r;	v->g = col.g;	v->b = col.b;	v->a = col.a;	v++;
-	v->x = p0.x;	v->y = p1.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = col.r;	v->g = col.g;	v->b = col.b;	v->a = col.a;	v++;
-	v->x = p1.x;	v->y = p0.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = col.r;	v->g = col.g;	v->b = col.b;	v->a = col.a;	v++;
+	const float uv = 248.0f / 256.0f;
 
-	// t1
-	v->x = p1.x;	v->y = p0.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = col.r;	v->g = col.g;	v->b = col.b;	v->a = col.a;	v++;
-	v->x = p0.x;	v->y = p1.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = col.r;	v->g = col.g;	v->b = col.b;	v->a = col.a;	v++;
-	v->x = p1.x;	v->y = p1.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = col.r;	v->g = col.g;	v->b = col.b;	v->a = col.a;
+	v->x = p0.x;	v->y = p0.y;	v->u = uv;	v->v = uv;	v->r = c0.r;	v->g = c0.g;	v->b = c0.b;	v->a = c0.a;	v++;
+	v->x = p1.x;	v->y = p1.y;	v->u = uv;	v->v = uv;	v->r = c1.r;	v->g = c1.g;	v->b = c1.b;	v->a = c1.a;	v++;
+	v->x = p2.x;	v->y = p2.y;	v->u = uv;	v->v = uv;	v->r = c2.r;	v->g = c2.g;	v->b = c2.b;	v->a = c2.a;	v++;
+}
+
+void draw_rect(vec2 p0, vec2 p1, colour col) {
+	draw_rect(p0, p1, col, col, col, col);
 }
 
 void draw_rect(vec2 p0, vec2 p1, colour c0, colour c1, colour c2, colour c3) {
-	if ((gRectVertCount + 6) > kMaxRectVerts)
-	{
-		DebugLn("DrawRect overflow");
-		return;
-	}
-
-	Vertex* v = &gRectVerts[gRectVertCount];
-
-	gRectVertCount += 6;
-
-	// t0
-	v->x = p0.x;	v->y = p0.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = c0.r;	v->g = c0.g;	v->b = c0.b;	v->a = c0.a;	v++;
-	v->x = p0.x;	v->y = p1.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = c2.r;	v->g = c2.g;	v->b = c2.b;	v->a = c2.a;	v++;
-	v->x = p1.x;	v->y = p0.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = c1.r;	v->g = c1.g;	v->b = c1.b;	v->a = c1.a;	v++;
-
-	// t1
-	v->x = p1.x;	v->y = p0.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = c1.r;	v->g = c1.g;	v->b = c1.b;	v->a = c1.a;	v++;
-	v->x = p0.x;	v->y = p1.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = c2.r;	v->g = c2.g;	v->b = c2.b;	v->a = c2.a;	v++;
-	v->x = p1.x;	v->y = p1.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = c3.r;	v->g = c3.g;	v->b = c3.b;	v->a = c3.a;
+	draw_quad(p0, vec2(p1.x, p0.y), vec2(p0.x, p1.y), p1, c0, c1, c2, c3);
 }
 
 void draw_quad(vec2 p0, vec2 p1, vec2 p2, vec2 p3, colour c0, colour c1, colour c2, colour c3) {
 	if ((gRectVertCount + 6) > kMaxRectVerts)
-	{
-		DebugLn("DrawRect overflow");
 		return;
-	}
+
+	c0 *= colour(c0.r, c0.g, c0.b, 1.0f);
+	c1 *= colour(c1.r, c1.g, c1.b, 1.0f);
+	c2 *= colour(c2.r, c2.g, c2.b, 1.0f);
+	c3 *= colour(c3.r, c3.g, c3.b, 1.0f);
 
 	Vertex* v = &gRectVerts[gRectVertCount];
 
 	gRectVertCount += 6;
 
+	const float uv = 248.0f / 256.0f;
+
 	// t0
-	v->x = p0.x;	v->y = p0.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = c0.r;	v->g = c0.g;	v->b = c0.b;	v->a = c0.a;	v++;
-	v->x = p2.x;	v->y = p2.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = c2.r;	v->g = c2.g;	v->b = c2.b;	v->a = c2.a;	v++;
-	v->x = p1.x;	v->y = p1.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = c1.r;	v->g = c1.g;	v->b = c1.b;	v->a = c1.a;	v++;
+	v->x = p0.x;	v->y = p0.y;	v->u = uv;	v->v = uv;	v->r = c0.r;	v->g = c0.g;	v->b = c0.b;	v->a = c0.a;	v++;
+	v->x = p2.x;	v->y = p2.y;	v->u = uv;	v->v = uv;	v->r = c2.r;	v->g = c2.g;	v->b = c2.b;	v->a = c2.a;	v++;
+	v->x = p1.x;	v->y = p1.y;	v->u = uv;	v->v = uv;	v->r = c1.r;	v->g = c1.g;	v->b = c1.b;	v->a = c1.a;	v++;
 
 	// t1
-	v->x = p1.x;	v->y = p1.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = c1.r;	v->g = c1.g;	v->b = c1.b;	v->a = c1.a;	v++;
-	v->x = p2.x;	v->y = p2.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = c2.r;	v->g = c2.g;	v->b = c2.b;	v->a = c2.a;	v++;
-	v->x = p3.x;	v->y = p3.y;	v->u = 0.0f;	v->v = 0.0f;	v->r = c3.r;	v->g = c3.g;	v->b = c3.b;	v->a = c3.a;
+	v->x = p1.x;	v->y = p1.y;	v->u = uv;	v->v = uv;	v->r = c1.r;	v->g = c1.g;	v->b = c1.b;	v->a = c1.a;	v++;
+	v->x = p2.x;	v->y = p2.y;	v->u = uv;	v->v = uv;	v->r = c2.r;	v->g = c2.g;	v->b = c2.b;	v->a = c2.a;	v++;
+	v->x = p3.x;	v->y = p3.y;	v->u = uv;	v->v = uv;	v->r = c3.r;	v->g = c3.g;	v->b = c3.b;	v->a = c3.a;
 }
 
 void draw_font_rect(vec2 p0, vec2 p1, vec2 uv0, vec2 uv1, colour col) {
 	if ((gFontVertCount + 6) > kMaxFontVerts)
-	{
-		DebugLn("draw_font_rect overflow");
 		return;
-	}
+
+	col *= colour(col.r, col.g, col.b, 1.0f);
 
 	Vertex* v = &gFontVerts[gFontVertCount];
 
@@ -147,10 +137,9 @@ void draw_font_rect(vec2 p0, vec2 p1, vec2 uv0, vec2 uv1, colour col) {
 
 void draw_tri_3d(vec3 p0, vec3 p1, vec3 p2, colour col) {
 	if ((gTriVertCount + 3) > kMaxTriVerts)
-	{
-		DebugLn("draw_tri_3d overflow");
 		return;
-	}
+
+	col *= colour(col.r, col.g, col.b, 1.0f);
 
 	Vertex* v = &gTriVerts[gTriVertCount];
 
@@ -160,6 +149,86 @@ void draw_tri_3d(vec3 p0, vec3 p1, vec3 p2, colour col) {
 	v->x = p0.x;	v->y = p0.y;	v->z = p0.z;	v->u = 0.0f;	v->v = 0.0f;	v->r = col.r;	v->g = col.g;	v->b = col.b;	v->a = col.a;	v++;
 	v->x = p1.x;	v->y = p1.y;	v->z = p1.z;	v->u = 0.0f;	v->v = 0.0f;	v->r = col.r;	v->g = col.g;	v->b = col.b;	v->a = col.a;	v++;
 	v->x = p2.x;	v->y = p2.y;	v->z = p2.z;	v->u = 0.0f;	v->v = 0.0f;	v->r = col.r;	v->g = col.g;	v->b = col.b;	v->a = col.a;
+}
+
+void draw_tile(vec2 p0, vec2 p1, vec2 p2, vec2 p3, colour c0, colour c1, colour c2, colour c3, int tile_num, int flags) {
+	if ((gRectVertCount + 6) > kMaxRectVerts)
+		return;
+
+	c0 *= colour(c0.r, c0.g, c0.b, 1.0f);
+	c1 *= colour(c1.r, c1.g, c1.b, 1.0f);
+	c2 *= colour(c2.r, c2.g, c2.b, 1.0f);
+	c3 *= colour(c3.r, c3.g, c3.b, 1.0f);
+
+	Vertex* v = &gRectVerts[gRectVertCount];
+
+	gRectVertCount += 6;
+
+	int tx = tile_num & 15;
+	int ty = tile_num >> 4;
+
+	vec2 uv0;
+	vec2 uv1;
+	vec2 uv2;
+	vec2 uv3;
+
+	const float a = 0.00001f / 16.0f; // UUURGH
+	const float b = 15.99999f / 16.0f;
+
+	if ((flags & 1) == 0) {
+		uv0 = vec2((tx + a) / 16.0f, (ty + a) / 16.0f);
+		uv1 = vec2((tx + b) / 16.0f, (ty + a) / 16.0f);
+		uv2 = vec2((tx + a) / 16.0f, (ty + b) / 16.0f);
+		uv3 = vec2((tx + b) / 16.0f, (ty + b) / 16.0f);
+	} else {
+		uv0 = vec2((tx + a) / 16.0f, (ty + b) / 16.0f);
+		uv1 = vec2((tx + a) / 16.0f, (ty + a) / 16.0f);
+		uv2 = vec2((tx + b) / 16.0f, (ty + b) / 16.0f);
+		uv3 = vec2((tx + b) / 16.0f, (ty + a) / 16.0f);
+	}
+
+	if (flags & 2) {
+		swap(uv0, uv2);
+		swap(uv1, uv3);
+		swap(uv0, uv1);
+		swap(uv2, uv3);
+	}
+
+	if (flags & DT_FLIP_X) {
+		swap(uv0, uv1);
+		swap(uv2, uv3);
+	}
+
+	if (flags & DT_FLIP_Y) {
+		swap(uv0, uv2);
+		swap(uv1, uv3);
+	}
+
+	// t0
+	v->x = p0.x;	v->y = p0.y;	v->u = uv0.x;	v->v = uv0.y;	v->r = c0.r;	v->g = c0.g;	v->b = c0.b;	v->a = c0.a;	v++;
+	v->x = p2.x;	v->y = p2.y;	v->u = uv2.x;	v->v = uv2.y;	v->r = c2.r;	v->g = c2.g;	v->b = c2.b;	v->a = c2.a;	v++;
+	v->x = p1.x;	v->y = p1.y;	v->u = uv1.x;	v->v = uv1.y;	v->r = c1.r;	v->g = c1.g;	v->b = c1.b;	v->a = c1.a;	v++;
+
+	// t1
+	v->x = p1.x;	v->y = p1.y;	v->u = uv1.x;	v->v = uv1.y;	v->r = c1.r;	v->g = c1.g;	v->b = c1.b;	v->a = c1.a;	v++;
+	v->x = p2.x;	v->y = p2.y;	v->u = uv2.x;	v->v = uv2.y;	v->r = c2.r;	v->g = c2.g;	v->b = c2.b;	v->a = c2.a;	v++;
+	v->x = p3.x;	v->y = p3.y;	v->u = uv3.x;	v->v = uv3.y;	v->r = c3.r;	v->g = c3.g;	v->b = c3.b;	v->a = c3.a;
+}
+
+void draw_tile(vec2 c, float s, float rot, colour col, int tile_num, int flags) {
+	vec2 cx(cosf(rot) * s * 0.5f, sinf(rot) * s * 0.5f);
+	vec2 cy(perp(cx));
+	draw_tile(c - cx - cy, c + cx - cy, c - cx + cy, c + cx + cy, col, col, col, col, tile_num, flags);
+}
+
+void draw_tile(vec2 c, float s, colour col, int tile_num, int flags) {
+	vec2 cx(s, 0.0f);
+	vec2 cy(0.0f, s);
+	draw_tile(c - cx - cy, c + cx - cy, c - cx + cy, c + cx + cy, col, col, col, col, tile_num, flags);
+}
+
+void draw_tile(vec2 p0, vec2 p1, colour col, int tile_num, int flags) {
+	draw_tile(p0, vec2(p1.x, p0.y), vec2(p0.x, p1.y), p1, col, col, col, col, tile_num, flags);
 }
 
 struct bloom_level {
@@ -187,6 +256,7 @@ bloom_level g_bloom_levels[MAX_BLOOM_LEVELS];
 gpu::Texture2d* g_draw_target;
 gpu::DepthBuffer* g_depth_target;
 gpu::Texture2d* g_font;
+gpu::Texture2d* g_sheet;
 
 void RenderInit()
 {
@@ -220,6 +290,7 @@ void RenderInit()
 	}
 
 	g_font = load_texture("data\\font.png");
+	g_sheet = load_texture("data\\sheet.png");
 }
 
 void RenderShutdown()
@@ -244,6 +315,7 @@ void RenderShutdown()
 		g_bloom_levels[i].destroy();
 
 	gpu::DestroyTexture2d(g_font);
+	gpu::DestroyTexture2d(g_sheet);
 }
 
 void RenderPreUpdate()
@@ -311,7 +383,7 @@ void RenderGame()
 	gpu::SetDepthTarget(g_depth_target);
 
 	gpu::SetViewport(ivec2(0, 0), g_WinSize, vec2(0.0f, 1.0f));
-	gpu::Clear(0x00060606);
+	gpu::Clear(0x000A1419);
 
 	gpu::SetDepthMode(true);
 	gpu::SetVsConst(0, gProj * gCam3d);
@@ -319,7 +391,9 @@ void RenderGame()
 	gpu::SetDepthMode(false);
 
 	gpu::SetVsConst(0, gCam);
-	gpu::Draw(gRectDecl, gRectVb, gRectVertCount, true, false);
+	gpu::SetTexture(0, g_sheet);
+	gpu::SetSampler(0, true, false);
+	gpu::Draw(gTexDecl, gRectVb, gRectVertCount, true, false);
 
 	gpu::SetTexture(0, g_font);
 	gpu::SetSampler(0, true, false);

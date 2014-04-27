@@ -2,7 +2,7 @@
 #include "Common.h"
 #include "resource.h"
 
-ivec2 g_WinSize(1152, 640);
+ivec2 g_WinSize(1024, 640);
 
 HWND gMainWnd;
 extern const wchar_t* gAppName;
@@ -21,13 +21,15 @@ int g_LocKeyS;
 int g_LocKeyA;
 int g_LocKeyD;
 
+bool is_key_pressed(key_press k) { return gKeyDown[k] != 0; }
+
 void GetPresentParams(D3DPRESENT_PARAMETERS* pp)
 {
 	RECT rc;
 	GetClientRect(gMainWnd, &rc);
 
-	g_WinSize.x = Max<int>(rc.right - rc.left, 16);
-	g_WinSize.y = Max<int>(rc.bottom - rc.top, 16);
+	g_WinSize.x = max<int>(rc.right - rc.left, 16);
+	g_WinSize.y = max<int>(rc.bottom - rc.top, 16);
 
 	pp->Windowed				= TRUE;
 	pp->SwapEffect				= D3DSWAPEFFECT_DISCARD;
@@ -75,6 +77,11 @@ int which_key(int c, bool shifted) {
 		case VK_DOWN:	return KEY_DOWN;
 		case VK_LEFT:	return KEY_LEFT;
 		case VK_RIGHT:	return KEY_RIGHT;
+
+		case VK_NUMPAD8:	return KEY_UP;
+		case VK_NUMPAD2:	return KEY_DOWN;
+		case VK_NUMPAD4:	return KEY_LEFT;
+		case VK_NUMPAD6:	return KEY_RIGHT;
 
 		case ' ':
 		case VK_TAB:
