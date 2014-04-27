@@ -89,12 +89,12 @@ int which_key(int c, bool shifted) {
 		return KEY_FIRE;
 
 		case 'Z':
-		case 'P':
+		case 'I':
 		case VK_SPACE:
 		return KEY_ALT_FIRE;
 
 		case 'C':
-		case 'I':
+		case 'P':
 		return KEY_PLACE;
 
 		case 'R':		return KEY_RESET;
