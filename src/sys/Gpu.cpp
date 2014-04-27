@@ -174,7 +174,7 @@ namespace gpu
 		gDevice->SetSamplerState(slot, D3DSAMP_MAGFILTER, bilin ? D3DTEXF_LINEAR : D3DTEXF_POINT);
 		gDevice->SetSamplerState(slot, D3DSAMP_MIPFILTER, bilin ? D3DTEXF_LINEAR : D3DTEXF_POINT);
 
-		gDevice->SetSamplerState(slot, D3DSAMP_SRGBTEXTURE, 1);
+		gDevice->SetSamplerState(slot, D3DSAMP_SRGBTEXTURE, TRUE);
 	}
 
 	void SetTexture(int slot, Texture2d* tex)

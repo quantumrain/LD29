@@ -37,7 +37,12 @@ struct player : entity {
 
 	bool _on_ground;
 	int _last_clipped;
+	bool _jump_latch;
 	int _jump_ground;
+	int _jump_launch;
+	int _wall_left;
+	int _wall_right;
+	int _wall_dragging;
 	int _ground_time;
 	int _anim;
 };
@@ -58,12 +63,13 @@ const int MAP_WIDTH = 20;
 const int MAP_HEIGHT = 100;
 
 struct game {
-	game() : _player() { }
+	game() : _player(), _cam_pos(MAP_WIDTH * 0.5f, 8.5f), _target_cam_y(8.5f) { }
 
 	tile _map[MAP_WIDTH * MAP_HEIGHT];
 	list<entity> _entities;
 	player* _player;
 	vec2 _cam_pos;
+	float _target_cam_y;
 
 	int get_tile(int x, int y) { return (x >= 0) && (y >= 0) && (x < MAP_WIDTH) && (y < MAP_HEIGHT) ? _map[MAP_WIDTH * y + x].type : TT_VOID; }
 	tile* get(int x, int y) { return (x >= 0) && (y >= 0) && (x < MAP_WIDTH) && (y < MAP_HEIGHT) ? &_map[MAP_WIDTH * y + x] : 0; }

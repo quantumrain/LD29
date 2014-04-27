@@ -31,7 +31,7 @@ float4 main(VS_OUTPUT input) : SV_TARGET {
 	bloom += tex2D(s4, input.uv);
 	bloom += tex2D(s5, input.uv);
 
-	float4 r = colour + bloom * 0.1f;
+	float4 r = colour + bloom * bloom * 0.5f;
 
 	float4 noise_f = (1.0f - saturate(r)) * 0.1f;
 

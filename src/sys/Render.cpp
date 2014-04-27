@@ -204,15 +204,28 @@ void draw_tile(vec2 p0, vec2 p1, vec2 p2, vec2 p3, colour c0, colour c1, colour 
 		swap(uv1, uv3);
 	}
 
-	// t0
-	v->x = p0.x;	v->y = p0.y;	v->u = uv0.x;	v->v = uv0.y;	v->r = c0.r;	v->g = c0.g;	v->b = c0.b;	v->a = c0.a;	v++;
-	v->x = p2.x;	v->y = p2.y;	v->u = uv2.x;	v->v = uv2.y;	v->r = c2.r;	v->g = c2.g;	v->b = c2.b;	v->a = c2.a;	v++;
-	v->x = p1.x;	v->y = p1.y;	v->u = uv1.x;	v->v = uv1.y;	v->r = c1.r;	v->g = c1.g;	v->b = c1.b;	v->a = c1.a;	v++;
+	if (flags & DT_ALT_TRI) {
+		// t0
+		v->x = p0.x;	v->y = p0.y;	v->u = uv0.x;	v->v = uv0.y;	v->r = c0.r;	v->g = c0.g;	v->b = c0.b;	v->a = c0.a;	v++;
+		v->x = p3.x;	v->y = p3.y;	v->u = uv3.x;	v->v = uv3.y;	v->r = c3.r;	v->g = c3.g;	v->b = c3.b;	v->a = c3.a;	v++;
+		v->x = p1.x;	v->y = p1.y;	v->u = uv1.x;	v->v = uv1.y;	v->r = c1.r;	v->g = c1.g;	v->b = c1.b;	v->a = c1.a;	v++;
 
-	// t1
-	v->x = p1.x;	v->y = p1.y;	v->u = uv1.x;	v->v = uv1.y;	v->r = c1.r;	v->g = c1.g;	v->b = c1.b;	v->a = c1.a;	v++;
-	v->x = p2.x;	v->y = p2.y;	v->u = uv2.x;	v->v = uv2.y;	v->r = c2.r;	v->g = c2.g;	v->b = c2.b;	v->a = c2.a;	v++;
-	v->x = p3.x;	v->y = p3.y;	v->u = uv3.x;	v->v = uv3.y;	v->r = c3.r;	v->g = c3.g;	v->b = c3.b;	v->a = c3.a;
+		// t1
+		v->x = p0.x;	v->y = p0.y;	v->u = uv0.x;	v->v = uv0.y;	v->r = c0.r;	v->g = c0.g;	v->b = c0.b;	v->a = c0.a;	v++;
+		v->x = p2.x;	v->y = p2.y;	v->u = uv2.x;	v->v = uv2.y;	v->r = c2.r;	v->g = c2.g;	v->b = c2.b;	v->a = c2.a;	v++;
+		v->x = p3.x;	v->y = p3.y;	v->u = uv3.x;	v->v = uv3.y;	v->r = c3.r;	v->g = c3.g;	v->b = c3.b;	v->a = c3.a;
+	}
+	else {
+		// t0
+		v->x = p0.x;	v->y = p0.y;	v->u = uv0.x;	v->v = uv0.y;	v->r = c0.r;	v->g = c0.g;	v->b = c0.b;	v->a = c0.a;	v++;
+		v->x = p2.x;	v->y = p2.y;	v->u = uv2.x;	v->v = uv2.y;	v->r = c2.r;	v->g = c2.g;	v->b = c2.b;	v->a = c2.a;	v++;
+		v->x = p1.x;	v->y = p1.y;	v->u = uv1.x;	v->v = uv1.y;	v->r = c1.r;	v->g = c1.g;	v->b = c1.b;	v->a = c1.a;	v++;
+
+		// t1
+		v->x = p1.x;	v->y = p1.y;	v->u = uv1.x;	v->v = uv1.y;	v->r = c1.r;	v->g = c1.g;	v->b = c1.b;	v->a = c1.a;	v++;
+		v->x = p2.x;	v->y = p2.y;	v->u = uv2.x;	v->v = uv2.y;	v->r = c2.r;	v->g = c2.g;	v->b = c2.b;	v->a = c2.a;	v++;
+		v->x = p3.x;	v->y = p3.y;	v->u = uv3.x;	v->v = uv3.y;	v->r = c3.r;	v->g = c3.g;	v->b = c3.b;	v->a = c3.a;
+	}
 }
 
 void draw_tile(vec2 c, float s, float rot, colour col, int tile_num, int flags) {
@@ -229,6 +242,10 @@ void draw_tile(vec2 c, float s, colour col, int tile_num, int flags) {
 
 void draw_tile(vec2 p0, vec2 p1, colour col, int tile_num, int flags) {
 	draw_tile(p0, vec2(p1.x, p0.y), vec2(p0.x, p1.y), p1, col, col, col, col, tile_num, flags);
+}
+
+void draw_tile(vec2 p0, vec2 p1, colour c0, colour c1, colour c2, colour c3, int tile_num, int flags) {
+	draw_tile(p0, vec2(p1.x, p0.y), vec2(p0.x, p1.y), p1, c0, c1, c2, c3, tile_num, flags);
 }
 
 struct bloom_level {
@@ -383,7 +400,7 @@ void RenderGame()
 	gpu::SetDepthTarget(g_depth_target);
 
 	gpu::SetViewport(ivec2(0, 0), g_WinSize, vec2(0.0f, 1.0f));
-	gpu::Clear(0x000A1419);
+	gpu::Clear(0x00000000);
 
 	gpu::SetDepthMode(true);
 	gpu::SetVsConst(0, gProj * gCam3d);

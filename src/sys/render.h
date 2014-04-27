@@ -64,13 +64,15 @@ enum draw_tile_flags {
 	DT_ROT_180 = 2,
 	DT_ROT_270 = 3,
 	DT_FLIP_X = 4,
-	DT_FLIP_Y = 8
+	DT_FLIP_Y = 8,
+	DT_ALT_TRI = 16
 };
 
 void draw_tile(vec2 p0, vec2 p1, vec2 p2, vec2 p3, colour c0, colour c1, colour c2, colour c3, int tile_num, int flags);
 void draw_tile(vec2 c, float s, float rot, colour col, int tile_num, int flags);
 void draw_tile(vec2 c, float s, colour col, int tile_num, int flags);
 void draw_tile(vec2 p0, vec2 p1, colour col, int tile_num, int flags);
+void draw_tile(vec2 p0, vec2 p1, colour c0, colour c1, colour c2, colour c3, int tile_num, int flags);
 
 enum font_flags {
 	TEXT_LEFT = 1,
