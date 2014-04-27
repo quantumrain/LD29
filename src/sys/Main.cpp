@@ -2,7 +2,7 @@
 #include "Common.h"
 #include "resource.h"
 
-ivec2 g_WinSize(1024, 640);
+ivec2 g_WinSize(1280, 720);
 
 HWND gMainWnd;
 extern const wchar_t* gAppName;

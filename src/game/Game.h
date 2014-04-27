@@ -68,6 +68,7 @@ struct player : entity {
 	int _health;
 	int _flash_money;
 	int _flash_health;
+	int _build;
 };
 
 struct bug : entity {

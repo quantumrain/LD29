@@ -60,7 +60,7 @@ void turret::spawned(game* g) {
 }
 
 void turret::tick(game* g) {
-	entity* target = find_entity_target(g, centre(), 8.0f);
+	entity* target = find_entity_target(g, centre(), 6.0f);
 
 	if (_reload > 0) _reload--;
 	_recoil *= 0.75f;

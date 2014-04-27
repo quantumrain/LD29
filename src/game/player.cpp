@@ -7,7 +7,7 @@ const int TIME_TILL_GROUNDED = 4;
 const int JUMP_LAUNCH_TIME = 8;
 const int FIRE_TIME = 5;
 
-player::player() : entity(ET_PLAYER), _on_ground(false), _last_clipped(), _jump_latch(), _jump_ground(), _jump_launch(), _wall_left(), _wall_right(), _wall_dragging(), _ground_time(), _fire_latch(), _fire_time(), _anim(), _money(5), _place_latch(), _health(8) {
+player::player() : entity(ET_PLAYER), _on_ground(false), _last_clipped(), _jump_latch(), _jump_ground(), _jump_launch(), _wall_left(), _wall_right(), _wall_dragging(), _ground_time(), _fire_latch(), _fire_time(), _anim(), _money(5), _place_latch(), _health(8), _build() {
 	_bb.max = vec2(4.0f / 16.0f, 12.0f / 16.0f);
 	_draw_off = vec2(0.0f, -2.0f / 16.0f);
 	_flash_money = 0;
@@ -90,34 +90,54 @@ void player::tick(game* g) {
 
 	if (is_key_pressed(KEY_PLACE)) {
 		if (!_place_latch && (_fire_time <= 0) && (_ground_time > TIME_TILL_GROUNDED)) {
-			_place_latch = true;
-
+			
 			if (_money >= 3) {
 				aabb2 box(to_vec2(tile_target) + 0.05f, to_vec2(tile_target) + 0.95f);
 
 				if (!is_obstructed(g, box)) {
 					if (g->get_tile(tile_target.x, tile_target.y) == TT_EMPTY) {
-						spawn_entity(g, new turret(), (box.min + box.max) * 0.5f);
+						if (++_build >= 20) {
+							spawn_entity(g, new turret(), (box.min + box.max) * 0.5f);
 						
-						_money -= 3;
-						_flash_money = 4;
+							_money -= 3;
+							_flash_money = 4;
+							_build = 0;
 
-						SoundPlay(kSid_TurretPlace, 1.0f, 1.0f);
+							SoundPlay(kSid_TurretPlace, 1.0f, 0.5f);
+
+							_place_latch = true;
+						}
+						else {
+							if (g_game_rand.rand(0, 2) == 0) {
+								SoundPlay(kSid_Buzz, g_game_rand.frand(1.0f, 2.0f), g_game_rand.frand(0.1f, 0.2f));
+							}
+
+							add_particle(g_game_rand.v2rand(box.min, box.max), vec2(), colour(0.1f, 0.75f, 0.1f, 0.25f), 0.25f, 0.25f, 0.0f, 8);
+						}
 					}
-					else
+					else {
 						SoundPlay(kSid_Buzz, 0.5f, 1.0f);
+						add_particle((box.min + box.max) * 0.5f, vec2(), colour(0.5f, 0.1f, 0.1f, 0.0f), 0.95f, 0.95f, 0.0f, 8);
+						_place_latch = true;
+					}
 				}
-				else
+				else {
 					SoundPlay(kSid_Buzz, 0.5f, 1.0f);
+					add_particle((box.min + box.max) * 0.5f, vec2(), colour(0.75f, 0.1f, 0.1f, 0.25f), 0.95f, 0.95f, 0.0f, 8);
+					_place_latch = true;
+				}
 			}
 			else {
 				_flash_money = 4;
 				SoundPlay(kSid_Buzz, 0.5f, 1.0f);
+				_place_latch = true;
 			}
 		}
 	}
-	else
+	else {
 		_place_latch = false;
+		_build = 0;
+	}
 
 	if (_fire_time > 0) {
 		if (g->is_solid(_fire_target.x, _fire_target.y)) {

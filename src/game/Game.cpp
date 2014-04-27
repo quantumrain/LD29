@@ -22,8 +22,10 @@ void GameInit() {
 				else if (j < (MAP_HEIGHT - 2)) {
 					t->type = ((i == 0) || (i == MAP_WIDTH - 1)) ? TT_WALL : TT_SOLID;
 
-					if (g_game_rand.rand(0, 10) == 0) {
-						t->ore = 1;
+					if ((i > 0) && (i < MAP_WIDTH - 1)) {
+						if (g_game_rand.rand(0, 10) == 0) {
+							t->ore = 1;
+						}
 					}
 				}
 				else
@@ -134,7 +136,7 @@ void GameUpdate() {
 
 		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Move + Aim - \001\002\003\004"); y += 0.5f;
 		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Jump - Z"); y += 0.5f;
-		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Zap Block - X"); y += 0.5f;
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Dig Block - X"); y += 0.5f;
 		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Place Turret - C"); y += 0.5f;
 
 		y += 0.25f;
@@ -177,14 +179,16 @@ void GameUpdate() {
 
 	set_camera(g->_cam_pos, 15.0f);
 
-	if (--g->_spawn_time <= 0) {
-		vec2 pos(g_game_rand.frand(1.0f, MAP_WIDTH - 1.0f), 2.0f);
+	if (g->_player) {
+		if (--g->_spawn_time <= 0) {
+			vec2 pos(g_game_rand.frand(1.0f, MAP_WIDTH - 1.0f), 2.0f);
 
-		if (bug* e = spawn_entity(&g_game, new bug(), pos)) {
+			if (bug* e = spawn_entity(&g_game, new bug(), pos)) {
+			}
+
+			g->_diff += g->_diff * 0.02f;
+			g->_spawn_time = clamp(120 - (int)(g->_diff * 10.0f), 2, 120);
 		}
-
-		g->_diff += g->_diff * 0.02f;
-		g->_spawn_time = clamp(120 - (int)(g->_diff * 10.0f), 2, 120);
 	}
 
 	tick_entities(g);
@@ -303,7 +307,7 @@ void GameUpdate() {
 						flags |= (hash & 16) ? DT_FLIP_X : 0;
 						flags |= (hash & 32) ? DT_FLIP_Y : 0;
 
-						draw_tile(vec2((float)i, (float)j), vec2((float)i + 1, (float)j + 1), colour(0.75f, 0.2f, 0.2f, 1.0f), 160 + (hash % 3), flags); 
+						draw_tile(vec2((float)i, (float)j), vec2((float)i + 1, (float)j + 1), colour(0.85f, 0.1f, 0.2f, 1.0f), 160 + (hash % 3), flags); 
 					}
 				}
 			}
