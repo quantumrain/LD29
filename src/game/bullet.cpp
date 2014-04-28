@@ -46,7 +46,7 @@ void bullet::on_hit_wall(game* g, int clipped) {
 }
 
 void bullet::post_tick(game* g) {
-	if (entity* e = find_entity(g, centre(), 0.3f)) {
+	if (entity* e = find_entity(g, centre(), 0.4f)) {
 		((bug*)e)->on_attacked(g);
 		destroy();
 	}

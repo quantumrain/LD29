@@ -153,7 +153,7 @@ const int MAP_WIDTH = 31;
 const int MAP_HEIGHT = 60;
 
 struct game {
-	game() : _player(), _cam_pos(MAP_WIDTH * 0.5f, 8.5f), _target_cam_y(8.5f), _spawn_time(800), _diff(1.0f), _diff_dmg(1.0f) { }
+	game() : _player(), _cam_pos(MAP_WIDTH * 0.5f, 8.5f), _target_cam_y(8.5f), _diff(1), _diff_dmg(1), _spawn_time(800), _spawn_count(6), _wave_incoming(true) { }
 
 	tile _map[MAP_WIDTH * MAP_HEIGHT];
 	list<entity> _entities;
@@ -161,9 +161,11 @@ struct game {
 	vec2 _cam_pos;
 	float _target_cam_y;
 
-	float _diff;
-	float _diff_dmg;
+	int _diff;
+	int _diff_dmg;
 	int _spawn_time;
+	int _spawn_count;
+	bool _wave_incoming;
 
 	int get_tile(int x, int y) { return (x >= 0) && (y >= 0) && (x < MAP_WIDTH) && (y < MAP_HEIGHT) ? _map[MAP_WIDTH * y + x].type : TT_VOID; }
 	tile* get(int x, int y) { return (x >= 0) && (y >= 0) && (x < MAP_WIDTH) && (y < MAP_HEIGHT) ? &_map[MAP_WIDTH * y + x] : 0; }

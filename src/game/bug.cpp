@@ -126,9 +126,7 @@ void bug::on_attacked(game* g) {
 		SoundPlay(kSid_BugHurt, g_game_rand.frand(0.9f, 1.1f), g_game_rand.frand(0.2f, 0.3f));
 	}
 
-	int max_dmg = (int)(4 * g->_diff_dmg);
-
-	if (++_damage >= max_dmg) {
+	if (++_damage >= g->_diff_dmg) {
 		for(int i = 0; i < 10; i++) {
 			colour c(0.7f, 0.7f, 0.7f, 1.0f);
 			add_particle(centre() + _draw_off + g_game_rand.sv2rand(vec2(0.3f)), vec2(0.0f, 0.02f), c, 0.3f, 0.3f, 0.0f, 10);

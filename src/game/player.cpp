@@ -167,7 +167,7 @@ void player::tick(game* g) {
 		if (--_fire_time == 0) {
 			if (tile* t = g->get(_fire_target.x, _fire_target.y)) {
 				if (t->type == TT_SOLID) {
-					int dmg = clamp(30 - max(_fire_target.y - 10, 0), 2, 30);
+					int dmg = clamp(30 - ((max(_fire_target.y - 10, 0) * 5) / 6), 2, 30);
 
 					if ((t->damage += dmg) >= t->max_damage()) {
 						t->type = TT_EMPTY;

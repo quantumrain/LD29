@@ -23,17 +23,19 @@ void GameInit() {
 					t->type = ((i == 0) || (i == MAP_WIDTH - 1)) ? TT_WALL : TT_SOLID;
 
 					if ((i > 0) && (i < MAP_WIDTH - 1)) {
+						int wall_c = max(20 - ((j - 10) / 2), 5);
+
 						if (g_game_rand.rand(0, 10) == 0) {
 							t->ore = 1;
 
 							for(int z = j / 15; z > 0; z--)
 								t->ore += g_game_rand.rand(0, 4) == 0;
 						}
-						else if (g_game_rand.rand(0, 200) == 0) {
+						else if (g_game_rand.rand(0, 150) == 0) {
 							if (j > 20)
 								t->ore = -1;
 						}
-						else if (g_game_rand.rand(0, 20) == 0) {
+						else if (g_game_rand.rand(0, wall_c) == 0) {
 							t->type = TT_WALL;
 						}
 					}
@@ -116,9 +118,12 @@ void GameUpdate() {
 
 		g->_cam_pos = vec2(MAP_WIDTH * 0.5f, 8.5f);
 		g->_target_cam_y = 8.5f;
+
+		g->_diff = 1;
+		g->_diff_dmg = 1;
 		g->_spawn_time = 800;
-		g->_diff = 1.0f;
-		g->_diff_dmg = 1.0f;
+		g->_spawn_count = 6;
+		g->_wave_incoming = true;
 
 		GameInit();
 
@@ -192,14 +197,24 @@ void GameUpdate() {
 
 	if (g->_player) {
 		if (--g->_spawn_time <= 0) {
-			vec2 pos(g_game_rand.frand(1.0f, MAP_WIDTH - 1.0f), 2.0f);
-
-			if (bug* e = spawn_entity(&g_game, new bug(), pos)) {
+			if (g->_wave_incoming) {
+				g->_diff_dmg = g->_diff;
 			}
 
-			g->_diff += sqrtf(g->_diff) * 0.05f;
-			g->_diff_dmg = sqrtf(g->_diff);
-			g->_spawn_time = clamp(120 - (int)(sqrtf(g->_diff_dmg) * 30.0f), 5, 120);
+			g->_wave_incoming = false;
+
+			vec2 pos(g_game_rand.frand(1.0f, MAP_WIDTH - 1.0f), 2.0f);
+
+			spawn_entity(&g_game, new bug(), pos);
+
+			g->_spawn_time = clamp(60 - g->_diff, 10, 60);
+
+			if (--g->_spawn_count <= 0){
+				g->_diff += 1 + (g->_diff / 5);
+				g->_spawn_count = 4 + 2 * (int)g->_diff;
+				g->_spawn_time = 600;
+				g->_wave_incoming = true;
+			}
 		}
 	}
 
@@ -406,9 +421,8 @@ void GameUpdate() {
 			draw_rect(pt, pt + vec2(0.3f, 0.4f), (i < p->_money) ? colour(0.2f, 0.2f, 0.6f, 1.0f) : colour(0.2f, 0.2f, 0.2f, 1.0f));
 		}
 
-		if (g->_diff == 1.0f) {
-			draw_string(orig + vec2(15.0f, 1.0f), 0.05f, TEXT_CENTRE, colour(0.6f, 1.0f), "FIRST WAVE INCOMING IN: %i.%02i", g->_spawn_time / 60, ((g->_spawn_time % 60) * 100) / 60);
-		}
+		if (g->_wave_incoming)
+			draw_string(orig + vec2(15.0f, 0.2f), 0.05f, TEXT_CENTRE, colour(0.6f, 1.0f), "WAVE INCOMING: %i.%02i", g->_spawn_time / 60, ((g->_spawn_time % 60) * 100) / 60);
 
 		vec2 bar_scale(1.0f, (float)MAP_HEIGHT / MAP_WIDTH); bar_scale *= 1.5f;
 		vec2 bar = orig + vec2(29.8f - bar_scale.x, 0.2f);
