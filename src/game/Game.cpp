@@ -118,6 +118,10 @@ void update_search(game* g, ivec2 start) {
 	}
 }
 
+colour get_master_colour(int j) {
+	return lerp(colour(0.6f, 0.9f, 0.1f, 1.0f), colour(0.1f, 0.6f, 0.9f, 1.0f), clamp((j - 10.0f) / (float)(MAP_HEIGHT - 10), 0.0f, 1.0f));
+}
+
 void GameUpdate() {
 	game* g = &g_game;
 
@@ -277,12 +281,9 @@ void GameUpdate() {
 	float sky_yf = 10.5f;
 	float sky_yb = 11.0f;
 
-	colour master_colour(0.6f, 0.9f, 0.1f, 1.0f);
-	colour tile_colour(master_colour); tile_colour *= colour(1.0f, 1.0f);
-	colour edge_colour(master_colour);
-	colour bk_colour(master_colour); bk_colour *= colour(0.2f, 1.0f);
-
 	for(int j = 0; j < MAP_HEIGHT; j++) {
+		colour bk_colour(get_master_colour(j) * colour(0.2f, 1.0f));
+
 		for(int i = 0; i < MAP_WIDTH; i++) {
 			int t = g->get_tile(i, j);
 
@@ -316,6 +317,8 @@ void GameUpdate() {
 	draw_rect(vec2(0.0f, sky_yf), vec2((float)MAP_WIDTH, sky_yb), colour(0.0f, 1.0f), colour(0.0f, 1.0f), colour(0.0f), colour(0.0f));
 
 	for(int j = 0; j < MAP_HEIGHT; j++) {
+		colour tile_colour(get_master_colour(j));
+
 		for(int i = 0; i < MAP_WIDTH; i++) {
 			int t = g->get_tile(i, j);
 
@@ -388,6 +391,8 @@ void GameUpdate() {
 	}
 
 	for(int j = 0; j < MAP_HEIGHT; j++) {
+		colour tile_colour(get_master_colour(j));
+
 		for(int i = 0; i < MAP_WIDTH; i++) {
 			if (!g->is_roughable(i, j)) {
 				float f = 1.0f / 8.0f;
@@ -402,22 +407,22 @@ void GameUpdate() {
 
 				if (xn) {
 					draw_tile(vec2((float)i - 1 + a, (float)j), vec2((float)i - 0 + a, (float)j + 1), tile_colour, edge_tile + 2, DT_ROT_270 | DT_FLIP_X);
-					draw_tile(vec2((float)i - 1 + a, (float)j), vec2((float)i - 0 + a, (float)j + 1), edge_colour, edge_tile, DT_ROT_270 | DT_FLIP_X);
+					draw_tile(vec2((float)i - 1 + a, (float)j), vec2((float)i - 0 + a, (float)j + 1), tile_colour, edge_tile, DT_ROT_270 | DT_FLIP_X);
 				}
 
 				if (xp) {
 					draw_tile(vec2((float)i + 1 - a, (float)j), vec2((float)i + 2 - a, (float)j + 1), tile_colour, edge_tile + 2, DT_ROT_270);
-					draw_tile(vec2((float)i + 1 - a, (float)j), vec2((float)i + 2 - a, (float)j + 1), edge_colour, edge_tile, DT_ROT_270);
+					draw_tile(vec2((float)i + 1 - a, (float)j), vec2((float)i + 2 - a, (float)j + 1), tile_colour, edge_tile, DT_ROT_270);
 				}
 
 				if (yn) {
 					draw_tile(vec2((float)i, (float)j - 1 + a), vec2((float)i + 1, (float)j - 0 + a), tile_colour, edge_tile + 2, DT_FLIP_Y);
-					draw_tile(vec2((float)i, (float)j - 1 + a), vec2((float)i + 1, (float)j - 0 + a), edge_colour, edge_tile, DT_FLIP_Y);
+					draw_tile(vec2((float)i, (float)j - 1 + a), vec2((float)i + 1, (float)j - 0 + a), tile_colour, edge_tile, DT_FLIP_Y);
 				}
 
 				if (yp) {
 					draw_tile(vec2((float)i, (float)j + 1 - a), vec2((float)i + 1, (float)j + 2 - a), tile_colour, edge_tile + 2, 0);
-					draw_tile(vec2((float)i, (float)j + 1 - a), vec2((float)i + 1, (float)j + 2 - a), edge_colour, edge_tile, 0);
+					draw_tile(vec2((float)i, (float)j + 1 - a), vec2((float)i + 1, (float)j + 2 - a), tile_colour, edge_tile, 0);
 				}
 			}
 
