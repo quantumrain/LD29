@@ -138,7 +138,7 @@ enum tile_type {
 struct tile {
 	u8 type;
 	u16 damage;
-	u8 ore;
+	i8 ore;
 	u32 search;
 
 	entity* owner;
@@ -150,10 +150,10 @@ struct tile {
 };
 
 const int MAP_WIDTH = 31;
-const int MAP_HEIGHT = 80;
+const int MAP_HEIGHT = 60;
 
 struct game {
-	game() : _player(), _cam_pos(MAP_WIDTH * 0.5f, 8.5f), _target_cam_y(8.5f), _spawn_time(800), _diff(1.0f) { }
+	game() : _player(), _cam_pos(MAP_WIDTH * 0.5f, 8.5f), _target_cam_y(8.5f), _spawn_time(800), _diff(1.0f), _diff_dmg(1.0f) { }
 
 	tile _map[MAP_WIDTH * MAP_HEIGHT];
 	list<entity> _entities;
@@ -162,6 +162,7 @@ struct game {
 	float _target_cam_y;
 
 	float _diff;
+	float _diff_dmg;
 	int _spawn_time;
 
 	int get_tile(int x, int y) { return (x >= 0) && (y >= 0) && (x < MAP_WIDTH) && (y < MAP_HEIGHT) ? _map[MAP_WIDTH * y + x].type : TT_VOID; }

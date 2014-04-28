@@ -66,10 +66,13 @@ void player::tick(game* g) {
 
 	if (_fire_time <= 0) {
 		if (g->is_solid(tile_target.x, tile_target.y)) {
-			if ((target_off.x == -1) && (_last_clipped & CLIPPED_XN)) _fire_latch = false;
-			if ((target_off.x == 1) && (_last_clipped & CLIPPED_XP)) _fire_latch = false;
-			if (target_off.y == 1) _fire_latch = false;
-			if (target_off.y == -1) _fire_latch = false;
+			int t = g->get_tile(tile_target.x, tile_target.y);
+			if (t == TT_SOLID) {
+				if ((target_off.x == -1) && (_last_clipped & CLIPPED_XN)) _fire_latch = false;
+				if ((target_off.x == 1) && (_last_clipped & CLIPPED_XP)) _fire_latch = false;
+				if (target_off.y == 1) _fire_latch = false;
+				if (target_off.y == -1) _fire_latch = false;
+			}
 		}
 	}
 
@@ -140,7 +143,13 @@ void player::tick(game* g) {
 	}
 
 	if (_fire_time > 0) {
-		if (g->is_solid(_fire_target.x, _fire_target.y)) {
+		if (g->get_tile(_fire_target.x, _fire_target.y) == TT_WALL) {
+			aabb2 box(to_vec2(_fire_target) + 0.05f, to_vec2(_fire_target) + 0.95f);
+			SoundPlay(kSid_Buzz, 0.5f, 1.0f);
+			add_particle((box.min + box.max) * 0.5f, vec2(), colour(0.5f, 0.1f, 0.1f, 0.0f), 0.95f, 0.95f, 0.0f, 8);
+			_fire_time = 0;
+		}
+		else if (g->is_solid(_fire_target.x, _fire_target.y)) {
 			colour c(0.0f, 1.0f, 1.0f, 1.0f);
 
 			c *= colour(g_game_rand.frand(), 1.0f);
@@ -169,8 +178,26 @@ void player::tick(game* g) {
 							add_particle(to_vec2(_fire_target) + g_game_rand.v2rand(vec2(0.1f), vec2(0.9f)), vec2(0.0f, 0.02f), c, 0.3f, 0.3f, 0.0f, 10);
 						}
 
-						if (t->ore)
-							spawn_entity(g, new gem(), to_vec2(_fire_target) + vec2(0.5f));
+						if (t->ore) {
+							for(int i = 0; i < t->ore; i++) {
+								if (entity* e = spawn_entity(g, new gem(), to_vec2(_fire_target) + vec2(0.5f))) {
+									e->_vel += g_game_rand.sv2rand(0.1f);
+								}
+							}
+
+							if (t->ore == -1) {
+								if (_health < 8) {
+									SoundPlay(kSid_GemCollect, 0.5f, 0.5f);
+									_health++;
+									_flash_health = 4;
+								}
+								else {
+									SoundPlay(kSid_Buzz, 0.5f, 0.5f);
+								}
+							}
+
+							t->ore = 0;
+						}
 					}
 					else {
 						if (is_key_pressed(KEY_FIRE))

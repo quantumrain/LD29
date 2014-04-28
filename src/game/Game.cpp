@@ -25,6 +25,16 @@ void GameInit() {
 					if ((i > 0) && (i < MAP_WIDTH - 1)) {
 						if (g_game_rand.rand(0, 10) == 0) {
 							t->ore = 1;
+
+							for(int z = j / 15; z > 0; z--)
+								t->ore += g_game_rand.rand(0, 4) == 0;
+						}
+						else if (g_game_rand.rand(0, 200) == 0) {
+							if (j > 20)
+								t->ore = -1;
+						}
+						else if (g_game_rand.rand(0, 20) == 0) {
+							t->type = TT_WALL;
 						}
 					}
 				}
@@ -108,6 +118,7 @@ void GameUpdate() {
 		g->_target_cam_y = 8.5f;
 		g->_spawn_time = 800;
 		g->_diff = 1.0f;
+		g->_diff_dmg = 1.0f;
 
 		GameInit();
 
@@ -186,8 +197,9 @@ void GameUpdate() {
 			if (bug* e = spawn_entity(&g_game, new bug(), pos)) {
 			}
 
-			g->_diff += g->_diff * 0.02f;
-			g->_spawn_time = clamp(120 - (int)(g->_diff * 10.0f), 2, 120);
+			g->_diff += sqrtf(g->_diff) * 0.05f;
+			g->_diff_dmg = sqrtf(g->_diff);
+			g->_spawn_time = clamp(120 - (int)(sqrtf(g->_diff_dmg) * 30.0f), 5, 120);
 		}
 	}
 
@@ -291,6 +303,8 @@ void GameUpdate() {
 
 				int tile_num = 128 + (hash % 4);
 
+				if (t == TT_WALL) tile_num = 136;
+
 				//tile_colour *= colour(0.75f, 1.0f);
 
 				draw_tile(vec2((float)i, (float)j), vec2((float)i + 1, (float)j + 1),
@@ -301,14 +315,19 @@ void GameUpdate() {
 					tile_num, (c0 + c8) < (c2 + c6) ? DT_ALT_TRI : 0);
 
 				if (tile* d = g->get(i, j)) {
-					if (d->ore) {
+					for(int z = 0; z < d->ore; z++) {
 						int flags = 0;
 
 						flags |= (hash & 16) ? DT_FLIP_X : 0;
 						flags |= (hash & 32) ? DT_FLIP_Y : 0;
 
 						draw_tile(vec2((float)i, (float)j), vec2((float)i + 1, (float)j + 1), colour(0.85f, 0.1f, 0.2f, 1.0f), 160 + (hash % 3), flags); 
+
+						hash ^= ((hash >> 3) * 3571);
 					}
+
+					if (d->ore == -1)
+						draw_tile(vec2((float)i, (float)j), vec2((float)i + 1, (float)j + 1), colour(0.5f, 0.5f, 0.5f, 1.0f), 163, 0); 
 				}
 			}
 		}
@@ -389,6 +408,36 @@ void GameUpdate() {
 
 		if (g->_diff == 1.0f) {
 			draw_string(orig + vec2(15.0f, 1.0f), 0.05f, TEXT_CENTRE, colour(0.6f, 1.0f), "FIRST WAVE INCOMING IN: %i.%02i", g->_spawn_time / 60, ((g->_spawn_time % 60) * 100) / 60);
+		}
+
+		vec2 bar_scale(1.0f, (float)MAP_HEIGHT / MAP_WIDTH); bar_scale *= 1.5f;
+		vec2 bar = orig + vec2(29.8f - bar_scale.x, 0.2f);
+
+		draw_rect(bar - 0.05f, bar + bar_scale + 0.05f, colour(0.2f, 0.25f));
+		draw_rect(bar, bar + bar_scale, colour(0.0f, 0.5f));
+
+		vec2 sc(1.0f / MAP_WIDTH, 1.0f / MAP_WIDTH); sc *= 1.5f;
+
+		for(uint32_t i = 0; i < g->_entities.size(); i++) {
+			entity* e = g->_entities[i];
+
+			if (!(e->_flags & entity::FLAG_DESTROYED)) {
+				colour c;
+
+				if (e->_type == ET_BUG)
+					c = colour(1.0f, 0.0f, 0.0f, 1.0f);
+				else if (e->_type == ET_TURRET)
+					c = colour(0.0f, 1.0f, 0.0f, 1.0f);
+				else if (e->_type == ET_PLAYER)
+					c = colour(1.0f, 1.0f, 0.0f, 1.0f);
+				else
+					continue;
+
+				vec2 p = e->centre() * sc + bar;
+				float s = 0.025f;
+
+				draw_rect(p - s, p + s, c);
+			}
 		}
 	}
 	else {
