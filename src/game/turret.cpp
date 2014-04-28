@@ -40,6 +40,8 @@ turret::turret() : entity(ET_TURRET) {
 	_rot = g_game_rand.sfrand(PI);
 	_rot_v = 0.0f;
 	_rot_t = g_game_rand.rand(2, 6);
+	_flash_t = 0;
+	_reload = 0;
 	_recoil = 0.0f;
 }
 
