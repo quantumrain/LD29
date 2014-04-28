@@ -97,34 +97,45 @@ void player::tick(game* g) {
 			if (_money >= 3) {
 				aabb2 box(to_vec2(tile_target) + 0.05f, to_vec2(tile_target) + 0.95f);
 
-				if (!is_obstructed(g, box)) {
-					if (g->get_tile(tile_target.x, tile_target.y) == TT_EMPTY) {
-						if (++_build >= 20) {
-							spawn_entity(g, new turret(), (box.min + box.max) * 0.5f);
+				bool did_fail = true;
+
+				if (tile* t = g->get(tile_target.x, tile_target.y)) {
+					if ((t->type == TT_TURRET) || !is_obstructed(g, box)) {
+						turret* tur = (turret*)t->owner;
+
+						if ((t->type != TT_TURRET) || (tur->_level == 0)) {
+							if ((t->type == TT_TURRET) || (t->type == TT_EMPTY)) {
+								did_fail = false;
+
+								if (++_build >= 20) {
+									if (t->type == TT_TURRET) {
+										tur->level_up();
+									}
+									else {
+										spawn_entity(g, new turret(), (box.min + box.max) * 0.5f);
+									}
 						
-							_money -= 3;
-							_flash_money = 4;
-							_build = 0;
+									_money -= 3;
+									_flash_money = 4;
+									_build = 0;
 
-							SoundPlay(kSid_TurretPlace, 1.0f, 0.5f);
+									SoundPlay(kSid_TurretPlace, 1.0f, 0.5f);
 
-							_place_latch = true;
-						}
-						else {
-							if (g_game_rand.rand(0, 2) == 0) {
-								SoundPlay(kSid_Buzz, g_game_rand.frand(1.0f, 2.0f), g_game_rand.frand(0.1f, 0.2f));
+									_place_latch = true;
+								}
+								else {
+									if (g_game_rand.rand(0, 2) == 0) {
+										SoundPlay(kSid_Buzz, g_game_rand.frand(1.0f, 2.0f), g_game_rand.frand(0.1f, 0.2f));
+									}
+
+									add_particle(g_game_rand.v2rand(box.min, box.max), vec2(), colour(0.1f, 0.75f, 0.1f, 0.25f), 0.25f, 0.25f, 0.0f, 8);
+								}
 							}
-
-							add_particle(g_game_rand.v2rand(box.min, box.max), vec2(), colour(0.1f, 0.75f, 0.1f, 0.25f), 0.25f, 0.25f, 0.0f, 8);
 						}
-					}
-					else {
-						SoundPlay(kSid_Buzz, 0.5f, 1.0f);
-						add_particle((box.min + box.max) * 0.5f, vec2(), colour(0.5f, 0.1f, 0.1f, 0.0f), 0.95f, 0.95f, 0.0f, 8);
-						_place_latch = true;
 					}
 				}
-				else {
+
+				if (did_fail) {
 					SoundPlay(kSid_Buzz, 0.5f, 1.0f);
 					add_particle((box.min + box.max) * 0.5f, vec2(), colour(0.75f, 0.1f, 0.1f, 0.25f), 0.95f, 0.95f, 0.0f, 8);
 					_place_latch = true;
@@ -202,6 +213,21 @@ void player::tick(game* g) {
 					else {
 						if (is_key_pressed(KEY_FIRE))
 							_fire_time = FIRE_TIME;
+					}
+				}
+				else if (t->type == TT_EMPTY) {
+					if (bullet* e = spawn_entity(g, new bullet(BT_PLAYER), centre())) {
+						ivec2 dd = _fire_target - to_ivec2(centre());
+
+						if (dd.y != 0) dd.x = 0;
+
+						if (dd.x < 0) e->_vel.x = -0.15f;
+						if (dd.x > 0) e->_vel.x = 0.15f;
+						if (dd.y < 0) e->_vel.y = -0.15f;
+						if (dd.y > 0) e->_vel.y = 0.15f;
+
+						if (!dd.x && !dd.y)
+							e->_vel.x = (_draw_flags & DT_FLIP_X) ? -0.15f : 0.15f;
 					}
 				}
 			}

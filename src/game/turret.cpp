@@ -43,6 +43,7 @@ turret::turret() : entity(ET_TURRET) {
 	_flash_t = 0;
 	_reload = 0;
 	_recoil = 0.0f;
+	_level = 0;
 }
 
 turret::~turret() {
@@ -62,7 +63,7 @@ void turret::spawned(game* g) {
 }
 
 void turret::tick(game* g) {
-	entity* target = find_entity_target(g, centre(), 6.0f);
+	entity* target = find_entity_target(g, centre(), _level ? 7.0f : 6.0f);
 
 	if (_reload > 0) _reload--;
 	_recoil *= 0.75f;
@@ -78,9 +79,12 @@ void turret::tick(game* g) {
 
 		if (_reload <= 0) {
 			if (fabsf(rd) < 0.2f) {
-				if (entity* e = spawn_entity(g, new bullet, centre())) {
+				vec2 d(rotation(rt));
+				vec2 bp = centre() + d * (8.0f / 16.0f);
+
+				if (entity* e = spawn_entity(g, new bullet(_level ? BT_SUPER : BT_NORMAL), bp)) {
 					e->_vel = rotation(rt) * 0.5f;
-					_reload = 20;
+					_reload = _level ? 45 : 25;
 					_recoil = 1.0f;
 					SoundPlay(kSid_TurretFire, g_game_rand.frand(0.9f, 1.1f), g_game_rand.frand(0.2f, 0.4f));
 				}
@@ -106,7 +110,7 @@ void turret::on_hit_wall(game* g, int clipped) {
 	if (clipped & CLIPPED_YN) _vel.y = max(_vel.y, 0.0f);
 }
 
-void turret::on_attacked(game* g) {
+void turret::on_attacked(game* g, int dmg) {
 	if (_flash_t <= 0) {
 		_flash_t = 6;
 		SoundPlay(kSid_TurretHurt, g_game_rand.frand(0.9f, 1.1f), g_game_rand.frand(0.6f, 0.7f));
@@ -117,11 +121,16 @@ void turret::post_tick(game* g) {
 }
 
 void turret::render(game* g) {
-	int f = ((_flash_t == 5) || (_flash_t == 6)) ? 2 : 0;
+	bool f = (_flash_t == 5) || (_flash_t == 6);
 
-	draw_tile(centre(), 0.5f, colour(), _sprite + f, _draw_flags);
+	draw_tile(centre(), 0.5f, colour(), f ? 82 : _sprite, _draw_flags);
 
 	vec2 d(rotation(_rot));
 
-	draw_tile(centre() + d * ((3.0f / 16.0f) - _recoil * 0.2f), 1.0f, _rot, colour(), 81 + f, _draw_flags);
+	draw_tile(centre() + d * ((3.0f / 16.0f) - _recoil * 0.2f), 1.0f, _rot, colour(), f ? 83 : (_sprite + 1), _draw_flags);
+}
+
+void turret::level_up() {
+	_level = 1;
+	_sprite = 89;
 }

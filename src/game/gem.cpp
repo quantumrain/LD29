@@ -26,7 +26,7 @@ void gem::on_hit_wall(game* g, int clipped) {
 
 void gem::post_tick(game* g) {
 	if (player* p = g->_player) {
-		if (length_sq(p->centre() - centre()) < square(0.3f)) {
+		if (length_sq(p->centre() - centre()) < square(0.4f)) {
 			if (p->_money < 8) {
 				p->_money += 1;
 				p->_flash_money = 4;

@@ -25,13 +25,7 @@ void GameInit() {
 					if ((i > 0) && (i < MAP_WIDTH - 1)) {
 						int wall_c = max(20 - ((j - 10) / 2), 5);
 
-						if (g_game_rand.rand(0, 10) == 0) {
-							t->ore = 1;
-
-							for(int z = j / 15; z > 0; z--)
-								t->ore += g_game_rand.rand(0, 4) == 0;
-						}
-						else if (g_game_rand.rand(0, 150) == 0) {
+						if (g_game_rand.rand(0, 150) == 0) {
 							if (j > 20)
 								t->ore = -1;
 						}
@@ -42,6 +36,23 @@ void GameInit() {
 				}
 				else
 					t->type = TT_WALL;
+			}
+		}
+
+		int ores = clamp(j / 15, 1, 10) + g_game_rand.rand(0, 2);
+		
+		for(int z = 0; z < ores; z++) {
+			int i = g_game_rand.rand(1, MAP_WIDTH - 2);
+
+			if (tile* t = g_game.get(i, j)) {
+				if (t->type == TT_SOLID) {
+					if (t->ore == 0) {
+						t->ore = 1;
+
+						for(int z = j / 15; z > 0; z--)
+							t->ore += g_game_rand.rand(0, 4) == 0;
+					}
+				}
 			}
 		}
 	}
@@ -136,28 +147,38 @@ void GameUpdate() {
 		float ratio = g_WinSize.y / (float)g_WinSize.x;
 		vec2 orig(-10.0f, -10.0f * ratio);
 
-		draw_string(vec2(0.0f, -4.0f), 0.15f, TEXT_CENTRE, colour(0.5f, 0.5f, 1.0f, 1.0f), "Tunnel Defense");
+		draw_string(vec2(0.0f, -4.5f), 0.15f, TEXT_CENTRE, colour(0.5f, 0.5f, 1.0f, 1.0f), "Tunnel Defense");
 
-		float y = -2.5f;
+		float y = -3.0f;
 
-		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.3f, 0.6f, 1.0f), "LD29 - Beneath the Surface"); y += 0.5f;
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.3f, 0.6f, 1.0f), "Originally made for LD29 - post competition version"); y += 0.5f;
 
 		y += 0.5f;
 
-		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.6f, 0.3f, 0.3f, 1.0f), "Dig for your life, The creeps are coming and the"); y += 0.5f;
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.6f, 0.3f, 0.3f, 1.0f), "Dig for your life, the creeps are coming and the"); y += 0.5f;
 		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.6f, 0.3f, 0.3f, 1.0f), "only safe place is underground! Collect resources"); y += 0.5f;
-		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.6f, 0.3f, 0.3f, 1.0f), "and build turrets (3 metal) to protect yourself."); y += 0.5f;
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.6f, 0.3f, 0.3f, 1.0f), "and build turrets to protect yourself."); y += 0.5f;
 
 		y += 0.25f;
 
-		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Move + Aim - \001\002\003\004"); y += 0.5f;
-		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Jump - Z"); y += 0.5f;
-		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Dig Block - X"); y += 0.5f;
-		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.6f, 0.3f, 1.0f), "Place Turret - C"); y += 0.5f;
+		float r = 5.0f;
+
+		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "\001\002\003\004");
+		draw_string(vec2(r, y), 0.05f, TEXT_RIGHT, colour(0.3f, 0.6f, 0.3f, 1.0f), "Move + Aim"); y += 0.5f;
+		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "Z");
+		draw_string(vec2(r, y), 0.05f, TEXT_RIGHT, colour(0.3f, 0.6f, 0.3f, 1.0f), "Jump "); y += 0.5f;
+		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "X");
+		draw_string(vec2(r, y), 0.05f, TEXT_RIGHT, colour(0.3f, 0.6f, 0.3f, 1.0f), "Dig block / shoot"); y += 0.5f;
+		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "C");
+		draw_string(vec2(r, y), 0.05f, TEXT_RIGHT, colour(0.3f, 0.6f, 0.3f, 1.0f), "Build / upgrade turret"); y += 0.5f;
 
 		y += 0.25f;
 
-		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.15f, 0.3f, 0.15f, 1.0f), "Alternate Controls - WASD, I, O, P"); y += 0.5f;
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.15f, 0.3f, 0.15f, 1.0f), "Alternate controls - WASD, I, O, P"); y += 0.5f;
+
+		y += 0.25f;
+
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.15f, 0.3f, 1.0f), "Building / upgrading a turret costs 3 metal."); y += 0.5f;
 
 		y += 0.25f;
 
@@ -198,20 +219,26 @@ void GameUpdate() {
 	if (g->_player) {
 		if (--g->_spawn_time <= 0) {
 			if (g->_wave_incoming) {
-				g->_diff_dmg = g->_diff;
+				g->_spawn_count = 4 + 4 * (int)g->_diff;
+				g->_diff_dmg = (int)(2.5f * (1 + g->_diff)) - 1;
 			}
 
 			g->_wave_incoming = false;
 
 			vec2 pos(g_game_rand.frand(1.0f, MAP_WIDTH - 1.0f), 2.0f);
 
-			spawn_entity(&g_game, new bug(), pos);
+			if (bug* e = spawn_entity(&g_game, new bug(), pos)) {
+				e->_max_damage = g->_diff_dmg;
 
-			g->_spawn_time = clamp(60 - g->_diff, 10, 60);
+				if (g_game_rand.rand(0, 5) == 0) e->_max_damage += g_game_rand.rand(0, g->_diff_dmg);
+				if (g_game_rand.rand(0, 15) == 0) e->_max_damage += g_game_rand.rand(0, g->_diff_dmg);
+				if (g_game_rand.rand(0, 30) == 0) e->_max_damage += g_game_rand.rand(0, g->_diff_dmg);
+			}
+
+			g->_spawn_time = clamp(60 - ((g->_diff * 5) / 4), 10, 60);
 
 			if (--g->_spawn_count <= 0){
 				g->_diff += 1 + (g->_diff / 5);
-				g->_spawn_count = 4 + 2 * (int)g->_diff;
 				g->_spawn_time = 600;
 				g->_wave_incoming = true;
 			}

@@ -34,7 +34,7 @@ float measure_string(const char* txt) {
 	float w = 0.0f;
 
 	for(; *txt; txt++)
-		w += measure_char(*txt);
+		w += measure_char(toupper(*txt));
 
 	return w;
 }
@@ -46,7 +46,9 @@ void draw_char(vec2 pos, vec2 scale, int sprite, colour col) {
 	vec2 uv0(sx / 8.0f, sy / 8.0f);
 	vec2 uv1(uv0 + vec2(1.0f / 8.0f));
 
-	draw_font_rect(pos, pos + 8.0f * scale, uv0, uv1, col);
+	vec2 fuzz(0.0001f);
+
+	draw_font_rect(pos, pos + 8.0f * scale, uv0 + fuzz, uv1 - fuzz, col);
 }
 
 void draw_string(vec2 pos, vec2 scale, int flags, colour col, const char* txt, ...) {
@@ -70,8 +72,13 @@ void draw_string(vec2 pos, vec2 scale, int flags, colour col, const char* txt, .
 		if (const char* ofs = strchr(letters, c))
 			sprite = (int)(intptr_t)(ofs - letters);
 
-		if (sprite >= 0)
-			draw_char(pos, scale, sprite, col); 
+		if (sprite >= 0) {
+			if (islower(*p))
+				draw_char(pos + scale * vec2(0.0f, 7.0f * 0.25f), scale * vec2(1.0f, 0.75f), sprite, col);
+			else
+				draw_char(pos, scale, sprite, col);
+
+		}
 
 		pos.x += measure_char(c) * scale.x;
 	}

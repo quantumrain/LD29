@@ -23,19 +23,29 @@ entity* find_entity(game* g, vec2 p, float radius) {
 	return best;
 }
 
-bullet::bullet() : entity(ET_BULLET) {
+bullet::bullet(bullet_type bul_type) : entity(ET_BULLET), _bul_type(bul_type) {
 	_flags |= FLAG_CUSTOM_RENDER;
 	_bb.max = vec2(4.0f / 16.0f, 4.0f / 16.0f);
 	_draw_off = vec2(0.0f, -1.0f / 16.0f);
-	_sprite = 84;
+	_sprite = (bul_type == BT_NORMAL) ? 84 : 91;
 	_time = 0;
+	_anim = 0;
 }
 
 bullet::~bullet() {
 }
 
 void bullet::tick(game* g) {
-	if (++_time > 60) destroy();
+	if (++_time > 60) {
+		for(int i = 0; i < 3; i++) {
+			colour c(1.0f, 1.0f, 1.0f, 1.0f);
+			add_particle(centre() + _draw_off + g_game_rand.sv2rand(vec2(0.1f)), vec2(0.0f, 0.02f), c, 0.1f, 0.1f, 0.0f, 10);
+		}
+
+		destroy();
+	}
+
+	_anim++;
 }
 
 void bullet::on_hit_wall(game* g, int clipped) {
@@ -47,11 +57,23 @@ void bullet::on_hit_wall(game* g, int clipped) {
 
 void bullet::post_tick(game* g) {
 	if (entity* e = find_entity(g, centre(), 0.4f)) {
-		((bug*)e)->on_attacked(g);
+		int dmg = 2;
+
+		switch(_bul_type) {
+			case BT_PLAYER: dmg = 1; break;
+			case BT_SUPER: dmg = 8; break;
+		}
+
+		((bug*)e)->on_attacked(g, dmg);
 		destroy();
 	}
 }
 
 void bullet::render(game* g) {
-	draw_tile(centre(), 1.0f, rotation_of(_vel), colour(), 84, _draw_flags);
+	int spr = _sprite;
+
+	if (_bul_type == BT_PLAYER)
+		spr = 85 + (_anim % 4);
+
+	draw_tile(centre(), 1.0f, rotation_of(_vel), colour(), spr, _draw_flags);
 }

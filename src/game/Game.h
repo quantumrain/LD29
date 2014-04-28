@@ -22,7 +22,7 @@ struct entity {
 	virtual void spawned(game* g);
 	virtual void tick(game* g);
 	virtual void on_hit_wall(game* g, int clipped);
-	virtual void on_attacked(game* g);
+	virtual void on_attacked(game* g, int dmg);
 	virtual void post_tick(game* g);
 	virtual void render(game* g);
 
@@ -77,12 +77,13 @@ struct bug : entity {
 
 	virtual void tick(game* g);
 	virtual void on_hit_wall(game* g, int clipped);
-	virtual void on_attacked(game* g);
+	virtual void on_attacked(game* g, int dmg);
 	virtual void post_tick(game* g);
 
 	int _damage;
 	bool _on_ground;
 	int _flash_t;
+	int _max_damage;
 };
 
 struct gem : entity {
@@ -103,9 +104,11 @@ struct turret : entity {
 	virtual void spawned(game* g);
 	virtual void tick(game* g);
 	virtual void on_hit_wall(game* g, int clipped);
-	virtual void on_attacked(game* g);
+	virtual void on_attacked(game* g, int dmg);
 	virtual void post_tick(game* g);
 	virtual void render(game* g);
+
+	void level_up();
 
 	float _rot;
 	float _rot_v;
@@ -113,10 +116,17 @@ struct turret : entity {
 	int _flash_t;
 	int _reload;
 	float _recoil;
+	int _level;
+};
+
+enum bullet_type {
+	BT_NORMAL,
+	BT_SUPER,
+	BT_PLAYER
 };
 
 struct bullet : entity {
-	bullet();
+	bullet(bullet_type bul_type);
 	virtual ~bullet();
 
 	virtual void tick(game* g);
@@ -125,6 +135,8 @@ struct bullet : entity {
 	virtual void render(game* g);
 
 	int _time;
+	bullet_type _bul_type;
+	int _anim;
 };
 
 enum tile_type {
@@ -150,7 +162,7 @@ struct tile {
 };
 
 const int MAP_WIDTH = 31;
-const int MAP_HEIGHT = 60;
+const int MAP_HEIGHT = 50;
 
 struct game {
 	game() : _player(), _cam_pos(MAP_WIDTH * 0.5f, 8.5f), _target_cam_y(8.5f), _diff(1), _diff_dmg(1), _spawn_time(800), _spawn_count(6), _wave_incoming(true) { }

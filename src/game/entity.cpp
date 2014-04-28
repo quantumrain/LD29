@@ -12,7 +12,7 @@ void entity::destroy() { _flags |= FLAG_DESTROYED; }
 void entity::spawned(game* g) { }
 void entity::tick(game* g) { }
 void entity::on_hit_wall(game* g, int clipped) { }
-void entity::on_attacked(game* g) { }
+void entity::on_attacked(game* g, int dmg) { }
 void entity::post_tick(game* g) { }
 void entity::render(game* g) { }
 

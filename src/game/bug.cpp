@@ -26,9 +26,10 @@ ivec2 determine_dir(game* g, ivec2 p) {
 }
 
 bug::bug() : entity(ET_BUG), _damage(), _on_ground(), _flash_t() {
-	_bb.max = vec2(10.0f / 16.0f, 6.0f / 16.0f);
+	_bb.max = vec2(10.0f / 16.0f, 10.0f / 16.0f);
 	_sprite = 48;
-	_draw_off = vec2(0.0f, -5.0f / 16.0f);
+	_draw_off = vec2(0.5f / 16.0f, -2.5f / 16.0f);
+	_max_damage = 1;
 }
 
 bug::~bug() {
@@ -52,6 +53,9 @@ void bug::tick(game* g) {
 
 	if (_on_ground)
 		_vel.y -= 0.05f;
+
+	if (dir.y < 0)
+		_vel.y -= 0.005f;
 
 	ivec2 tp = ic + dir;
 
@@ -77,7 +81,7 @@ void bug::tick(game* g) {
 				}
 			}
 			else {
-				if (t->owner) t->owner->on_attacked(g);
+				if (t->owner) t->owner->on_attacked(g, 1);
 			}
 		}
 	}
@@ -120,13 +124,15 @@ void bug::on_hit_wall(game* g, int clipped) {
 	if (clipped & CLIPPED_YN) _vel.y = max(_vel.y, 0.0f);
 }
 
-void bug::on_attacked(game* g) {
+void bug::on_attacked(game* g, int dmg) {
 	if (_flash_t <= 0) {
 		_flash_t = 4;
 		SoundPlay(kSid_BugHurt, g_game_rand.frand(0.9f, 1.1f), g_game_rand.frand(0.2f, 0.3f));
 	}
 
-	if (++_damage >= g->_diff_dmg) {
+	_damage += dmg;
+
+	if (_damage >= _max_damage) {
 		for(int i = 0; i < 10; i++) {
 			colour c(0.7f, 0.7f, 0.7f, 1.0f);
 			add_particle(centre() + _draw_off + g_game_rand.sv2rand(vec2(0.3f)), vec2(0.0f, 0.02f), c, 0.3f, 0.3f, 0.0f, 10);
