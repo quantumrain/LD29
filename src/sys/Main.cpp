@@ -21,6 +21,14 @@ int g_LocKeyS;
 int g_LocKeyA;
 int g_LocKeyD;
 
+int g_LocKeyZ;
+int g_LocKeyX;
+int g_LocKeyC;
+
+int g_LocKeyI;
+int g_LocKeyO;
+int g_LocKeyP;
+
 bool is_key_pressed(key_press k) { return gKeyDown[k] != 0; }
 
 void GetPresentParams(D3DPRESENT_PARAMETERS* pp)
@@ -83,19 +91,11 @@ int which_key(int c, bool shifted) {
 		case VK_NUMPAD4:	return KEY_LEFT;
 		case VK_NUMPAD6:	return KEY_RIGHT;
 
-		case 'X':
-		case 'O':
 		case VK_RETURN:
 		return KEY_FIRE;
 
-		case 'Z':
-		case 'I':
 		case VK_SPACE:
 		return KEY_ALT_FIRE;
-
-		case 'C':
-		case 'P':
-		return KEY_PLACE;
 
 		case 'R':		return KEY_RESET;
 		case VK_F1:		return KEY_MODE;
@@ -125,6 +125,14 @@ int which_key(int c, bool shifted) {
 	if (c == g_LocKeyS) return KEY_DOWN;
 	if (c == g_LocKeyA) return KEY_LEFT;
 	if (c == g_LocKeyD) return KEY_RIGHT;
+
+	if (c == g_LocKeyZ) return KEY_ALT_FIRE;
+	if (c == g_LocKeyX) return KEY_FIRE;
+	if (c == g_LocKeyC) return KEY_PLACE;
+
+	if (c == g_LocKeyI) return KEY_ALT_FIRE;
+	if (c == g_LocKeyO) return KEY_FIRE;
+	if (c == g_LocKeyP) return KEY_PLACE;
 
 	return KEY_NONE;
 }
@@ -291,6 +299,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
 	g_LocKeyS = MapVirtualKey(0x1F, MAPVK_VSC_TO_VK);
 	g_LocKeyA = MapVirtualKey(0x1E, MAPVK_VSC_TO_VK);
 	g_LocKeyD = MapVirtualKey(0x20, MAPVK_VSC_TO_VK);
+
+	g_LocKeyZ = MapVirtualKey(44, MAPVK_VSC_TO_VK);
+	g_LocKeyX = MapVirtualKey(45, MAPVK_VSC_TO_VK);
+	g_LocKeyC = MapVirtualKey(46, MAPVK_VSC_TO_VK);
+
+	g_LocKeyI = MapVirtualKey(23, MAPVK_VSC_TO_VK);
+	g_LocKeyO = MapVirtualKey(24, MAPVK_VSC_TO_VK);
+	g_LocKeyP = MapVirtualKey(25, MAPVK_VSC_TO_VK);
 
 	// Main
 

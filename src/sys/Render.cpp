@@ -29,7 +29,7 @@ const int kMaxRectVerts = 64 * 1024;
 Vertex gRectVerts[kMaxRectVerts];
 int gRectVertCount;
 
-const int kMaxFontVerts = 2 * 1024;
+const int kMaxFontVerts = 4 * 1024;
 Vertex gFontVerts[kMaxRectVerts];
 int gFontVertCount;
 

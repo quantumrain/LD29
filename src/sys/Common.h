@@ -62,6 +62,19 @@ enum key_press {
 	KEY_MAX
 };
 
+extern int g_LocKeyW;
+extern int g_LocKeyS;
+extern int g_LocKeyA;
+extern int g_LocKeyD;
+
+extern int g_LocKeyZ;
+extern int g_LocKeyX;
+extern int g_LocKeyC;
+
+extern int g_LocKeyI;
+extern int g_LocKeyO;
+extern int g_LocKeyP;
+
 extern ivec2 g_WinSize;
 extern int gKey;
 extern DWORD gKeyDown[KEY_MAX];

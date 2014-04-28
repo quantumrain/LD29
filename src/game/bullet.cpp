@@ -60,8 +60,15 @@ void bullet::post_tick(game* g) {
 		int dmg = 2;
 
 		switch(_bul_type) {
-			case BT_PLAYER: dmg = 1; break;
-			case BT_SUPER: dmg = 8; break;
+			case BT_PLAYER:
+				dmg = g->_plr_dmg;
+				if (g_game_rand.rand(0, 4) == 0) dmg *= 2;
+			break;
+
+			case BT_SUPER:
+				dmg = 8;
+				if (g_game_rand.rand(0, 5) == 0) dmg *= 2;
+			break;
 		}
 
 		((bug*)e)->on_attacked(g, dmg);

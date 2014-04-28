@@ -135,6 +135,7 @@ void GameUpdate() {
 		g->_spawn_time = 800;
 		g->_spawn_count = 6;
 		g->_wave_incoming = true;
+		g->_plr_dmg = 1;
 
 		GameInit();
 
@@ -147,9 +148,9 @@ void GameUpdate() {
 		float ratio = g_WinSize.y / (float)g_WinSize.x;
 		vec2 orig(-10.0f, -10.0f * ratio);
 
-		draw_string(vec2(0.0f, -4.5f), 0.15f, TEXT_CENTRE, colour(0.5f, 0.5f, 1.0f, 1.0f), "Tunnel Defense");
+		draw_string(vec2(0.0f, -4.75), 0.15f, TEXT_CENTRE, colour(0.5f, 0.5f, 1.0f, 1.0f), "Tunnel Defense");
 
-		float y = -3.0f;
+		float y = -3.25f;
 
 		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.3f, 0.6f, 1.0f), "Originally made for LD29 - post competition version"); y += 0.5f;
 
@@ -165,20 +166,21 @@ void GameUpdate() {
 
 		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "\001\002\003\004");
 		draw_string(vec2(r, y), 0.05f, TEXT_RIGHT, colour(0.3f, 0.6f, 0.3f, 1.0f), "Move + Aim"); y += 0.5f;
-		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "Z");
+		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "%c", g_LocKeyZ);
 		draw_string(vec2(r, y), 0.05f, TEXT_RIGHT, colour(0.3f, 0.6f, 0.3f, 1.0f), "Jump "); y += 0.5f;
-		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "X");
+		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "%c", g_LocKeyX);
 		draw_string(vec2(r, y), 0.05f, TEXT_RIGHT, colour(0.3f, 0.6f, 0.3f, 1.0f), "Dig block / shoot"); y += 0.5f;
-		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "C");
+		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "%c", g_LocKeyC);
 		draw_string(vec2(r, y), 0.05f, TEXT_RIGHT, colour(0.3f, 0.6f, 0.3f, 1.0f), "Build / upgrade turret"); y += 0.5f;
 
 		y += 0.25f;
 
-		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.15f, 0.3f, 0.15f, 1.0f), "Alternate controls - WASD, I, O, P"); y += 0.5f;
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.15f, 0.3f, 0.15f, 1.0f), "Alternate controls - %c%c%c%c, %c, %c, %c", g_LocKeyW, g_LocKeyA, g_LocKeyS, g_LocKeyD, g_LocKeyI, g_LocKeyO, g_LocKeyP); y += 0.5f;
 
 		y += 0.25f;
 
 		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.15f, 0.3f, 1.0f), "Building / upgrading a turret costs 3 metal."); y += 0.5f;
+		draw_string(vec2(0.0f, y), 0.05f, TEXT_CENTRE, colour(0.3f, 0.15f, 0.3f, 1.0f), "Building a turret increases your shot power."); y += 0.5f;
 
 		y += 0.25f;
 
@@ -212,6 +214,16 @@ void GameUpdate() {
 		update_search(g, to_ivec2(p->centre()));
 
 		g->_cam_pos = lerp(g->_cam_pos, target_cam_pos, 0.2f);
+
+		g->_plr_dmg = 1;
+
+		for(uint32_t i = 0; i < g->_entities.size(); i++) {
+			entity* e = g->_entities[i];
+			if (!(e->_flags & entity::FLAG_DESTROYED)) {
+				if (e->_type == ET_TURRET)
+					g->_plr_dmg++;
+			}
+		}
 	}
 
 	set_camera(g->_cam_pos, 15.0f);
