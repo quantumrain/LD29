@@ -60,8 +60,8 @@ void draw_string(vec2 pos, vec2 scale, int flags, colour col, const char* txt, .
 	_vsnprintf_s(buf, sizeof(buf), _TRUNCATE, txt, ap);
 	va_end(ap);
 
-	if (flags == TEXT_CENTRE)		pos.x -= measure_string(txt) * 0.5f * scale.x;
-	else if (flags == TEXT_RIGHT)	pos.x -= measure_string(txt) * scale.x;
+	if (flags == TEXT_CENTRE)		pos.x -= measure_string(buf) * 0.5f * scale.x;
+	else if (flags == TEXT_RIGHT)	pos.x -= measure_string(buf) * scale.x;
 
 	const char* letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.:/-!@(),\\;?'\"+*=<>%&\001\002\003\004";
 

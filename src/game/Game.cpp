@@ -171,7 +171,7 @@ void GameUpdate() {
 		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "\001\002\003\004");
 		draw_string(vec2(r, y), 0.05f, TEXT_RIGHT, colour(0.3f, 0.6f, 0.3f, 1.0f), "Move + Aim"); y += 0.5f;
 		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "%c", g_LocKeyZ);
-		draw_string(vec2(r, y), 0.05f, TEXT_RIGHT, colour(0.3f, 0.6f, 0.3f, 1.0f), "Jump "); y += 0.5f;
+		draw_string(vec2(r, y), 0.05f, TEXT_RIGHT, colour(0.3f, 0.6f, 0.3f, 1.0f), "Jump"); y += 0.5f;
 		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "%c", g_LocKeyX);
 		draw_string(vec2(r, y), 0.05f, TEXT_RIGHT, colour(0.3f, 0.6f, 0.3f, 1.0f), "Dig block / shoot"); y += 0.5f;
 		draw_string(vec2(-r, y), 0.05f, TEXT_LEFT, colour(0.6f, 0.6f, 0.6f, 1.0f), "%c", g_LocKeyC);
